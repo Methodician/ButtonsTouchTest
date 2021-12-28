@@ -15,6 +15,33 @@
 #define YELLOW_WIRE    0 // A6
 #define BLUE_WIRE      1 // A7
 
+uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
+uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
+
+
+void printAllStates() {
+  Serial.print("green: ");
+  Serial.print(digitalRead(GREEN_WIRE));
+  Serial.print(" white: ");
+  Serial.print(digitalRead(WHITE_WIRE));
+  Serial.print(" yellow: ");
+  Serial.print(digitalRead(YELLOW_WIRE));
+  Serial.print(" blue: ");
+  Serial.println(digitalRead(BLUE_WIRE));
+}
+
+void setAllPullup() {
+    for (int i=0; i < numberOfPads; i++) {
+      pinMode(i, INPUT_PULLUP);
+    }
+}
+
+void setAllPulldown() {
+    for (int i=0; i < numberOfPads; i++) {
+      pinMode(i, INPUT_PULLDOWN);
+    }
+}
+
 void setup() {
   // put your setup code here, to run once:
   // pinMode(1, INPUT_PULLUP);
@@ -23,31 +50,16 @@ void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
 
-  pinMode(GREEN_WIRE, INPUT_PULLUP);
-  pinMode(WHITE_WIRE, INPUT_PULLDOWN);
-  pinMode(YELLOW_WIRE, INPUT_PULLUP);
-  pinMode(BLUE_WIRE, INPUT_PULLDOWN);
-
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  // Serial.println(digitalRead(1));
-  // Serial.println(digitalRead(2));
-  // Serial.println(digitalRead(3));
 
-// int reading = digitalRead(3);
+  setAllPullup();
+  Serial.println("on pullup:");
+  printAllStates();
+  setAllPulldown();
+  Serial.println("on pulldown:");
+  printAllStates();
 
-// Serial.println(reading);
-
-Serial.print("green: ");
-Serial.print(digitalRead(GREEN_WIRE));
-Serial.print(" white: ");
-Serial.print(digitalRead(WHITE_WIRE));
-Serial.print(" yellow: ");
-Serial.print(digitalRead(YELLOW_WIRE));
-Serial.print(" blue: ");
-Serial.println(digitalRead(BLUE_WIRE));
-
-delay(500);
+  delay(500);
 }
