@@ -11,13 +11,16 @@
 //  A7 p1
 
 #define GREEN_WIRE     3 // A4
+#define GREEN_PIXEL    0
 #define WHITE_WIRE     2 // A5
+#define WHITE_PIXEL    1
 #define YELLOW_WIRE    0 // A6
+#define YELLOW_PIXEL   3
 #define BLUE_WIRE      1 // A7
+#define BLUE_PIXEL     4
 
 uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
 uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
-
 
 void printAllStates() {
   Serial.print("green: ");
@@ -31,24 +34,28 @@ void printAllStates() {
 }
 
 void setAllPullup() {
+    // state will be 1 and ground makes it 0
     for (int i=0; i < numberOfPads; i++) {
       pinMode(i, INPUT_PULLUP);
     }
 }
 
 void setAllPulldown() {
+    // state will be 0 and hot makes it 1
     for (int i=0; i < numberOfPads; i++) {
       pinMode(i, INPUT_PULLDOWN);
     }
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  // pinMode(1, INPUT_PULLUP);
-  // pinMode(2, INPUT_PULLUP);
 
   Serial.begin(9600);
   CircuitPlayground.begin();
+
+  // CircuitPlayground.setPixelColor(0, 0, 0, 255);
+  // CircuitPlayground.setPixelColor(4, 255, 0, 0);
+  // CircuitPlayground.setPixelColor(5, 255, 155, 0);
+  // CircuitPlayground.setPixelColor(6, 255, 255, 0);
 
 }
 
