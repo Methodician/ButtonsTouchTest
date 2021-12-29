@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Adafruit_CircuitPlayground.h>
+#include <JC_Button.h>
 
 //  A0 p?
 //  A1 p6
@@ -21,86 +22,91 @@
 #define BLUE_WIRE      1 // A7
 #define BLUE_PIXEL     4
 
-uint32_t currentPinMode = INPUT_PULLUP;
-uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
-uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
+Button greenBtn(GREEN_WIRE);
+Button whiteBtn(WHITE_WIRE);
+Button yellowBtn(YELLOW_WIRE);
+Button blueBtn(BLUE_WIRE);
+
+// uint32_t currentPinMode = INPUT_PULLUP;
+// uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
+// uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
 
 // questionable state management
 // pulldown active = 0
 // not activated   = 1
 // pullup active   = 2
-struct WireStates {
-  unsigned int greenState;
-  unsigned int whiteState;
-  unsigned int yellowState;
-  unsigned int blueState;
-};
+// struct WireStates {
+//   unsigned int greenState;
+//   unsigned int whiteState;
+//   unsigned int yellowState;
+//   unsigned int blueState;
+// };
 
-WireStates wireStates;
+// WireStates wireStates;
 
-void printState(unsigned int state) {
-  switch (state) {
-    case 0:
-      Serial.println("pulldown");
-      break;
-    case 1:
-      Serial.println("not activated");
-      break;
-    case 2:
-      Serial.println("pullup");
-      break;
-  }
-}
+// void printState(unsigned int state) {
+//   switch (state) {
+//     case 0:
+//       Serial.println("pulldown");
+//       break;
+//     case 1:
+//       Serial.println("not activated");
+//       break;
+//     case 2:
+//       Serial.println("pullup");
+//       break;
+//   }
+// }
 
-void updateStates() {
-  for (int i = 0; i < numberOfPads; i++) {
-    int pin = pads[i];
-    int state = digitalRead(pin);
-    if (currentPinMode == INPUT_PULLUP) {
-      if(state == LOW) {
-        state = 2;
-      } else {
-        state = 1;
-      }
-    }
-    if(currentPinMode == INPUT_PULLDOWN) {
-      if(state == HIGH) {
-        state = 0;
-      } else {
-        state = 1;
-      }
-    }
-    switch (pin) {
-      case GREEN_WIRE:
-        wireStates.greenState = state;
-        break;
-      case WHITE_WIRE:
-        wireStates.whiteState = state;
-        break;
-      case YELLOW_WIRE:
-        wireStates.yellowState = state;
-        break;
-      case BLUE_WIRE:
-        wireStates.blueState = state;
-        break;
-    }
-  }
-}
+// void updateStates() {
+//   for (int i = 0; i < numberOfPads; i++) {
+//     int pin = pads[i];
+//     int state = digitalRead(pin);
+//     if (currentPinMode == INPUT_PULLUP) {
+//       if(state == LOW) {
+//         state = 2;
+//       } else {
+//         state = 1;
+//       }
+//     }
+//     if(currentPinMode == INPUT_PULLDOWN) {
+//       if(state == HIGH) {
+//         state = 0;
+//       } else {
+//         state = 1;
+//       }
+//     }
+//     switch (pin) {
+//       case GREEN_WIRE:
+//         wireStates.greenState = state;
+//         break;
+//       case WHITE_WIRE:
+//         wireStates.whiteState = state;
+//         break;
+//       case YELLOW_WIRE:
+//         wireStates.yellowState = state;
+//         break;
+//       case BLUE_WIRE:
+//         wireStates.blueState = state;
+//         break;
+//     }
+//   }
+// }
 
-void printAllStates() {
-  Serial.print("green: ");
-  printState(wireStates.greenState);
-  // Serial.println(digitalRead(GREEN_WIRE));
-  Serial.print("white: ");
-  printState(wireStates.whiteState);
-  // Serial.println(digitalRead(WHITE_WIRE));
-  Serial.print("yellow: ");
-  printState(wireStates.yellowState);
-  // Serial.println(digitalRead(YELLOW_WIRE));
-  Serial.print("blue: ");
-  printState(wireStates.blueState);
-  // Serial.println(digitalRead(BLUE_WIRE));
-}
+// void printAllStates() {
+//   Serial.print("green: ");
+//   printState(wireStates.greenState);
+//   // Serial.println(digitalRead(GREEN_WIRE));
+//   Serial.print("white: ");
+//   printState(wireStates.whiteState);
+//   // Serial.println(digitalRead(WHITE_WIRE));
+//   Serial.print("yellow: ");
+//   printState(wireStates.yellowState);
+//   // Serial.println(digitalRead(YELLOW_WIRE));
+//   Serial.print("blue: ");
+//   printState(wireStates.blueState);
+//   // Serial.println(digitalRead(BLUE_WIRE));
+// }
 
 // void setAllPullup() {
 //     // state will be 1 and ground makes it 0
@@ -116,42 +122,86 @@ void printAllStates() {
 //     }
 // }
 
-void setAllPinModes() {
-  for (int i=0; i < numberOfPads; i++) {
-    pinMode(i, currentPinMode);
-  }
-}
+// void setAllPinModes() {
+//   for (int i=0; i < numberOfPads; i++) {
+//     pinMode(i, currentPinMode);
+//   }
+// }
 
 void setup() {
 
   Serial.begin(9600);
   CircuitPlayground.begin();
+  greenBtn.begin();
+  whiteBtn.begin();
+  yellowBtn.begin();
+  blueBtn.begin();
 
   // set all to not activated
-  wireStates.greenState = 1;
-  wireStates.whiteState = 1;
-  wireStates.yellowState = 1;
-  wireStates.blueState = 1;
-
-  // CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 255);
-  // CircuitPlayground.setPixelColor(WHITE_PIXEL, 255, 0, 0);
-  // CircuitPlayground.setPixelColor(YELLOW_PIXEL, 255, 155, 0);
-  // CircuitPlayground.setPixelColor(BLUE_PIXEL, 255, 255, 0);
+  // wireStates.greenState = 1;
+  // wireStates.whiteState = 1;
+  // wireStates.yellowState = 1;
+  // wireStates.blueState = 1;
 
 }
 
 void loop() {
 
-  currentPinMode = INPUT_PULLUP; // Goes from 1 to 0
-  setAllPinModes();
-  updateStates();
-  Serial.println("PULLUP:");
-  printAllStates();
-  currentPinMode = INPUT_PULLDOWN; // Goes from 0 to 1
-  setAllPinModes();
-  updateStates();
-  Serial.println("PULLDOWN:");
-  printAllStates();
+  greenBtn.read();
+  whiteBtn.read();
+  yellowBtn.read();
+  blueBtn.read();
 
-  delay(500);
+  if(greenBtn.isPressed()) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 71, 2);
+  } 
+  if(greenBtn.isReleased()) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(greenBtn.wasPressed()) {
+    Serial.println("green");
+  }
+
+  if(whiteBtn.isPressed()) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 48, 48, 48);
+  }
+  if(whiteBtn.isReleased()) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(whiteBtn.wasPressed()) {
+    Serial.println("white");
+  }
+
+  if(yellowBtn.isPressed()) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 71, 69, 0);
+  }
+  if(yellowBtn.isReleased()) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+  }
+  if(yellowBtn.wasPressed()) {
+    Serial.println("yellow");
+  }
+
+  if(blueBtn.isPressed()) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 71);
+  }
+  if(blueBtn.isReleased()) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+  if(blueBtn.wasPressed()) {
+    Serial.println("blue");
+  }
+
+  // currentPinMode = INPUT_PULLUP; // Goes from 1 to 0
+  // setAllPinModes();
+  // updateStates();
+  // Serial.println("PULLUP:");
+  // printAllStates();
+  // currentPinMode = INPUT_PULLDOWN; // Goes from 0 to 1
+  // setAllPinModes();
+  // updateStates();
+  // Serial.println("PULLDOWN:");
+  // printAllStates();
+
+  // delay(500);
 }
