@@ -21,6 +21,7 @@
 #define BLUE_WIRE      1 // A7
 #define BLUE_PIXEL     4
 
+uint32_t currentPinMode = INPUT_PULLUP;
 uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
 uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
 
@@ -51,29 +52,74 @@ void printState(unsigned int state) {
   }
 }
 
+void updateStates() {
+  for (int i = 0; i < numberOfPads; i++) {
+    int pin = pads[i];
+    int state = digitalRead(pin);
+    if (currentPinMode == INPUT_PULLUP) {
+      if(state == LOW) {
+        state = 2;
+      } else {
+        state = 1;
+      }
+    }
+    if(currentPinMode == INPUT_PULLDOWN) {
+      if(state == HIGH) {
+        state = 0;
+      } else {
+        state = 1;
+      }
+    }
+    switch (pin) {
+      case GREEN_WIRE:
+        wireStates.greenState = state;
+        break;
+      case WHITE_WIRE:
+        wireStates.whiteState = state;
+        break;
+      case YELLOW_WIRE:
+        wireStates.yellowState = state;
+        break;
+      case BLUE_WIRE:
+        wireStates.blueState = state;
+        break;
+    }
+  }
+}
+
 void printAllStates() {
   Serial.print("green: ");
   printState(wireStates.greenState);
+  // Serial.println(digitalRead(GREEN_WIRE));
   Serial.print("white: ");
   printState(wireStates.whiteState);
+  // Serial.println(digitalRead(WHITE_WIRE));
   Serial.print("yellow: ");
   printState(wireStates.yellowState);
+  // Serial.println(digitalRead(YELLOW_WIRE));
   Serial.print("blue: ");
   printState(wireStates.blueState);
+  // Serial.println(digitalRead(BLUE_WIRE));
 }
 
-void setAllPullup() {
-    // state will be 1 and ground makes it 0
-    for (int i=0; i < numberOfPads; i++) {
-      pinMode(i, INPUT_PULLUP);
-    }
-}
+// void setAllPullup() {
+//     // state will be 1 and ground makes it 0
+//     for (int i=0; i < numberOfPads; i++) {
+//       pinMode(i, INPUT_PULLUP);
+//     }
+// }
 
-void setAllPulldown() {
-    // state will be 0 and hot makes it 1
-    for (int i=0; i < numberOfPads; i++) {
-      pinMode(i, INPUT_PULLDOWN);
-    }
+// void setAllPulldown() {
+//     // state will be 0 and hot makes it 1
+//     for (int i=0; i < numberOfPads; i++) {
+//       pinMode(i, INPUT_PULLDOWN);
+//     }
+// }
+
+void setAllPinModes() {
+  for (int i=0; i < numberOfPads; i++) {
+    pinMode(i, currentPinMode);
+  }
 }
 
 void setup() {
@@ -96,11 +142,15 @@ void setup() {
 
 void loop() {
 
-  setAllPullup();
-  Serial.println("on pullup:");
+  currentPinMode = INPUT_PULLUP; // Goes from 1 to 0
+  setAllPinModes();
+  updateStates();
+  Serial.println("PULLUP:");
   printAllStates();
-  setAllPulldown();
-  Serial.println("on pulldown:");
+  currentPinMode = INPUT_PULLDOWN; // Goes from 0 to 1
+  setAllPinModes();
+  updateStates();
+  Serial.println("PULLDOWN:");
   printAllStates();
 
   delay(500);
