@@ -10,6 +10,8 @@
 //  A6 p0
 //  A7 p1
 
+
+
 #define GREEN_WIRE     3 // A4
 #define GREEN_PIXEL    0
 #define WHITE_WIRE     2 // A5
@@ -22,15 +24,42 @@
 uint8_t pads[] = {GREEN_WIRE, YELLOW_WIRE, WHITE_WIRE, BLUE_WIRE};
 uint8_t numberOfPads = sizeof(pads) / sizeof(uint8_t);
 
+// questionable state management
+// pulldown active = 0
+// not activated   = 1
+// pullup active   = 2
+struct WireStates {
+  unsigned int greenState;
+  unsigned int whiteState;
+  unsigned int yellowState;
+  unsigned int blueState;
+};
+
+WireStates wireStates;
+
+void printState(unsigned int state) {
+  switch (state) {
+    case 0:
+      Serial.println("pulldown");
+      break;
+    case 1:
+      Serial.println("not activated");
+      break;
+    case 2:
+      Serial.println("pullup");
+      break;
+  }
+}
+
 void printAllStates() {
   Serial.print("green: ");
-  Serial.print(digitalRead(GREEN_WIRE));
-  Serial.print(" white: ");
-  Serial.print(digitalRead(WHITE_WIRE));
-  Serial.print(" yellow: ");
-  Serial.print(digitalRead(YELLOW_WIRE));
-  Serial.print(" blue: ");
-  Serial.println(digitalRead(BLUE_WIRE));
+  printState(wireStates.greenState);
+  Serial.print("white: ");
+  printState(wireStates.whiteState);
+  Serial.print("yellow: ");
+  printState(wireStates.yellowState);
+  Serial.print("blue: ");
+  printState(wireStates.blueState);
 }
 
 void setAllPullup() {
@@ -52,10 +81,16 @@ void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
 
-  // CircuitPlayground.setPixelColor(0, 0, 0, 255);
-  // CircuitPlayground.setPixelColor(4, 255, 0, 0);
-  // CircuitPlayground.setPixelColor(5, 255, 155, 0);
-  // CircuitPlayground.setPixelColor(6, 255, 255, 0);
+  // set all to not activated
+  wireStates.greenState = 1;
+  wireStates.whiteState = 1;
+  wireStates.yellowState = 1;
+  wireStates.blueState = 1;
+
+  // CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 255);
+  // CircuitPlayground.setPixelColor(WHITE_PIXEL, 255, 0, 0);
+  // CircuitPlayground.setPixelColor(YELLOW_PIXEL, 255, 155, 0);
+  // CircuitPlayground.setPixelColor(BLUE_PIXEL, 255, 255, 0);
 
 }
 
