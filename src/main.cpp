@@ -25,8 +25,15 @@
 
 class Btn {
   public:
-    Btn(uint8_t pin, uint32_t dbTime=25, uint8_t puEnable=true, uint8_t invert=true)
-    : _pin(pin), _dbTime(dbTime), _puEnable(puEnable), _invert(invert) {}
+    Btn(
+      uint8_t pin,
+      uint32_t dbTime=25,
+      uint8_t puEnable=true,
+      uint8_t invert=true)
+    : _pin(pin),
+      _dbTime(dbTime),
+      _puEnable(puEnable),
+      _invert(invert) {}
 
     void begin() {
       pinMode(_pin, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
@@ -96,6 +103,104 @@ class Btn {
     uint32_t _lastChange; 
 };
 
+class ComboBtn {
+
+  public:
+    ComboBtn(
+      uint8_t pin1,
+      uint8_t pin2,
+      uint32_t dbTime=25,
+      uint8_t puEnable=true,
+      uint8_t invert=true)
+    : _pin1(pin1),
+      _pin2(pin2),
+      _dbTime(dbTime),
+      _puEnable(puEnable),
+      _invert(invert) {}
+
+    void begin() {
+      pinMode(_pin1, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
+      pinMode(_pin2, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
+      _state1 = digitalRead(_pin1);
+      _state2 = digitalRead(_pin2);
+      if (_invert) {
+        _state1 = !_state1;
+        _state2 = !_state2;
+      }
+      _time = millis();
+      _lastState1 = _state1;
+      _lastState2 = _state2;
+      _changed = false;
+      _lastChange = _time;
+    }
+
+    bool read() {
+      uint32_t ms = millis();
+      bool pinVal1 = digitalRead(_pin1);
+      bool pinVal2 = digitalRead(_pin2);
+      if (_invert) {
+        pinVal1 = !pinVal1;
+        pinVal2 = !pinVal2;
+      }
+      if (ms - _lastChange < _dbTime) {
+        _changed = false;
+      } else {
+        _lastState1 = _state1;
+        _lastState2 = _state2;
+        _state1 = pinVal1;
+        _state2 = pinVal2;
+        _changed = (_state1 != _lastState1) || (_state2 != _lastState2);
+        if (_changed) {
+          _lastChange = ms;
+        }
+      }
+      _time = ms;
+      return _state1 && _state2;
+    }
+
+    bool isPressed() {
+      return _state1 && _state2;
+    }
+
+    bool isReleased() {
+      return !_state1 && !_state2;
+    }
+
+    bool wasPressed() {
+      return _changed && _state1 && _state2;
+    }
+
+    bool wasReleased() {
+      return _changed && !_state1 && !_state2;
+    }
+
+    bool pressedFor(uint32_t ms) {
+      return _state1 && _state2 && _time - _lastChange >= ms;
+    }
+
+    bool releasedFor(uint32_t ms) {
+      return !_state1 && !_state2 && _time - _lastChange >= ms;
+    }
+
+    uint32_t lastChange() {
+      return _lastChange;
+    }
+
+  private:
+    uint8_t _pin1;
+    uint8_t _pin2;
+    uint32_t _dbTime;
+    bool _puEnable;
+    bool _invert;
+    bool _state1;
+    bool _state2;
+    bool _lastState1;
+    bool _lastState2;
+    bool _changed;
+    uint32_t _time;
+    uint32_t _lastChange;
+};
+
 struct Buttons {
   Btn green;
   Btn white;
@@ -124,10 +229,13 @@ struct AreReleased {
   bool blue;
 };
 
+ComboBtn blueGreenBtn(GREEN_WIRE, BLUE_WIRE, DEBOUNCE_TIME);
+
 Btn greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
 Btn whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
 Btn yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
 Btn blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
+
 Buttons buttons = {
   greenBtn,
   whiteBtn,
@@ -235,14 +343,28 @@ void showLights() {
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
-  beginButtons();
+  // beginButtons();
+  blueBtn.begin();
+  greenBtn.begin();
+  blueGreenBtn.begin();
 }
 
 void loop() {
-
-  readButtons();
-  updateStates();
+  blueGreenBtn.read();
+  blueBtn.read();
+  greenBtn.read();
+  if(blueGreenBtn.wasPressed()) {
+    Serial.println("blueGreenBtn");
   }
+  if(!blueGreenBtn.wasPressed() && blueBtn.wasPressed()) {
+    Serial.println("blueBtn");
+  }
+  if(!blueGreenBtn.wasPressed() && greenBtn.wasPressed()) {
+    Serial.println("greenBtn");
+  }
+  // readButtons();
+  // updateStates();
+  // }
 
   // showLights();
 
