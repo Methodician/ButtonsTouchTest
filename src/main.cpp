@@ -38,51 +38,51 @@ class Btn {
       _lastChange = _time;
     }
 
-  bool read() {
-    uint32_t ms = millis();
-    bool pinVal = digitalRead(_pin);
-    if (_invert) pinVal = !pinVal;
-    if (ms - _lastChange < _dbTime) {
-      _changed = false;
-    } else {
-      _lastState = _state;
-      _state = pinVal;
-      _changed = (_state != _lastState);
-      if (_changed) {
-        _lastChange = ms;
+    bool read() {
+      uint32_t ms = millis();
+      bool pinVal = digitalRead(_pin);
+      if (_invert) pinVal = !pinVal;
+      if (ms - _lastChange < _dbTime) {
+        _changed = false;
+      } else {
+        _lastState = _state;
+        _state = pinVal;
+        _changed = (_state != _lastState);
+        if (_changed) {
+          _lastChange = ms;
+        }
       }
+      _time = ms;
+      return _state;
     }
-    _time = ms;
-    return _state;
-  }
 
-  bool isPressed() {
-    return _state;
-  }
+    bool isPressed() {
+      return _state;
+    }
 
-  bool isReleased() {
-    return !_state;
-  }
+    bool isReleased() {
+      return !_state;
+    }
 
-  bool wasPressed() {
-    return _changed && _state;
-  }
+    bool wasPressed() {
+      return _changed && _state;
+    }
 
-  bool wasReleased() {
-    return _changed && !_state;
-  }
+    bool wasReleased() {
+      return _changed && !_state;
+    }
 
-  bool pressedFor(uint32_t ms) {
-    return _state && _state - _lastChange >= ms;
-  }
+    bool pressedFor(uint32_t ms) {
+      return _state && _time - _lastChange >= ms;
+    }
 
-  bool releasedFor(uint32_t ms) {
-    return !_state && _time - _lastChange >= ms;
-  }
+    bool releasedFor(uint32_t ms) {
+      return !_state && _time - _lastChange >= ms;
+    }
 
-  uint32_t lastChange() {
-    return _lastChange;
-  }
+    uint32_t lastChange() {
+      return _lastChange;
+    }
 
   private:
     uint8_t _pin;          // arduino pin number connected to button
@@ -242,16 +242,8 @@ void loop() {
 
   readButtons();
   updateStates();
-  // if(werePressed.green){
-  //   Serial.println("green");
-  // }
-  if(werePressed.blue){
-    Serial.print(werePressed.blue);
-    Serial.println(werePressed.green);
   }
-  if(werePressed.green && werePressed.blue){
-    Serial.println("cyan");
-  }
+
   // showLights();
 
 }
