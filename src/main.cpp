@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Adafruit_CircuitPlayground.h>
-#include <JC_Button.h>
 
 //  A0 p?
 //  A1 p6
@@ -24,11 +23,84 @@
 
 #define DEBOUNCE_TIME  90
 
+class Btn {
+  public:
+    Btn(uint8_t pin, uint32_t dbTime=25, uint8_t puEnable=true, uint8_t invert=true)
+    : _pin(pin), _dbTime(dbTime), _puEnable(puEnable), _invert(invert) {}
+
+    void begin() {
+      pinMode(_pin, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
+      _state = digitalRead(_pin);
+      if (_invert) _state = !_state;
+      _time = millis();
+      _lastState = _state;
+      _changed = false;
+      _lastChange = _time;
+    }
+
+  bool read() {
+    uint32_t ms = millis();
+    bool pinVal = digitalRead(_pin);
+    if (_invert) pinVal = !pinVal;
+    if (ms - _lastChange < _dbTime) {
+      _changed = false;
+    } else {
+      _lastState = _state;
+      _state = pinVal;
+      _changed = (_state != _lastState);
+      if (_changed) {
+        _lastChange = ms;
+      }
+    }
+    _time = ms;
+    return _state;
+  }
+
+  bool isPressed() {
+    return _state;
+  }
+
+  bool isReleased() {
+    return !_state;
+  }
+
+  bool wasPressed() {
+    return _changed && _state;
+  }
+
+  bool wasReleased() {
+    return _changed && !_state;
+  }
+
+  bool pressedFor(uint32_t ms) {
+    return _state && _state - _lastChange >= ms;
+  }
+
+  bool releasedFor(uint32_t ms) {
+    return !_state && _time - _lastChange >= ms;
+  }
+
+  uint32_t lastChange() {
+    return _lastChange;
+  }
+
+  private:
+    uint8_t _pin;          // arduino pin number connected to button
+    uint32_t _dbTime;      // debounce time (ms)
+    bool _puEnable;        // internal pullup resistor enabled
+    bool _invert;          // if true, interpret logic low as pressed, else interpret logic high as pressed
+    bool _state;           // current button state, true=pressed
+    bool _lastState;       // previous button state
+    bool _changed;         // state changed since last read
+    uint32_t _time;        // time of current state (ms from millis)
+    uint32_t _lastChange; 
+};
+
 struct Buttons {
-  Button green;
-  Button white;
-  Button yellow;
-  Button blue;
+  Btn green;
+  Btn white;
+  Btn yellow;
+  Btn blue;
 };
 
 struct WerePressed {
@@ -52,10 +124,10 @@ struct AreReleased {
   bool blue;
 };
 
-Button greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
-Button whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
-Button yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
-Button blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
+Btn greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
+Btn whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
+Btn yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
+Btn blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
 Buttons buttons = {
   greenBtn,
   whiteBtn,
@@ -97,10 +169,10 @@ void updateStates() {
   };
 
   areReleased = {
-    greenBtn.wasReleased(),
-    whiteBtn.wasReleased(),
-    yellowBtn.wasReleased(),
-    blueBtn.wasReleased()
+    greenBtn.isReleased(),
+    whiteBtn.isReleased(),
+    yellowBtn.isReleased(),
+    blueBtn.isReleased()
   };
 }
 
@@ -113,6 +185,20 @@ void showLights() {
   }
   if(werePressed.green) {
     Serial.println("green");
+  }
+
+  if(arePressed.green && arePressed.blue) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 57, 59);
+  }
+
+  if(areReleased.green && areReleased.blue) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+
+  if(werePressed.green && werePressed.blue) {
+    Serial.println("cyan");
   }
 
   if(arePressed.white) {
@@ -156,6 +242,16 @@ void loop() {
 
   readButtons();
   updateStates();
-  showLights();
+  // if(werePressed.green){
+  //   Serial.println("green");
+  // }
+  if(werePressed.blue){
+    Serial.print(werePressed.blue);
+    Serial.println(werePressed.green);
+  }
+  if(werePressed.green && werePressed.blue){
+    Serial.println("cyan");
+  }
+  // showLights();
 
 }
