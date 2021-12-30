@@ -206,6 +206,9 @@ struct Buttons {
   Btn white;
   Btn yellow;
   Btn blue;
+  ComboBtn blueGreen;
+  ComboBtn blueWhite;
+  ComboBtn blueYellow;
 };
 
 struct WerePressed {
@@ -213,6 +216,9 @@ struct WerePressed {
   bool white;
   bool yellow;
   bool blue;
+  bool blueGreen;
+  bool blueWhite;
+  bool blueYellow;
 };
 
 struct ArePressed {
@@ -220,6 +226,9 @@ struct ArePressed {
   bool white;
   bool yellow;
   bool blue;
+  bool blueGreen;
+  bool blueWhite;
+  bool blueYellow;
 };
 
 struct AreReleased {
@@ -227,31 +236,41 @@ struct AreReleased {
   bool white;
   bool yellow;
   bool blue;
+  bool blueGreen;
+  bool blueWhite;
+  bool blueYellow;
 };
-
-ComboBtn blueGreenBtn(GREEN_WIRE, BLUE_WIRE, DEBOUNCE_TIME);
 
 Btn greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
 Btn whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
 Btn yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
 Btn blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
+ComboBtn blueGreenBtn(BLUE_WIRE, GREEN_WIRE, DEBOUNCE_TIME);
+ComboBtn blueWhiteBtn(BLUE_WIRE, WHITE_WIRE, DEBOUNCE_TIME);
+ComboBtn blueYellowBtn(BLUE_WIRE, YELLOW_WIRE, DEBOUNCE_TIME);
 
 Buttons buttons = {
   greenBtn,
   whiteBtn,
   yellowBtn,
-  blueBtn
+  blueBtn,
+  blueGreenBtn,
+  blueWhiteBtn,
+  blueYellowBtn,
 };
 
-WerePressed werePressed = {false, false, false, false};
-ArePressed arePressed = {false, false, false, false};
-AreReleased areReleased = {false, false, false, false};
+WerePressed werePressed = {false, false, false, false, false, false, false};
+ArePressed arePressed = {false, false, false, false, false, false, false};
+AreReleased areReleased = {false, false, false, false, false, false, false};
 
 void beginButtons() {
   greenBtn.begin();
   whiteBtn.begin();
   yellowBtn.begin();
   blueBtn.begin();
+  blueGreenBtn.begin();
+  blueWhiteBtn.begin();
+  blueYellowBtn.begin();
 }
 
 void readButtons() {
@@ -259,28 +278,40 @@ void readButtons() {
   whiteBtn.read();
   yellowBtn.read();
   blueBtn.read();
+  blueGreenBtn.read();
+  blueWhiteBtn.read();
+  blueYellowBtn.read();
 }
 
 void updateStates() {
   werePressed = {
-    greenBtn.wasPressed(),
-    whiteBtn.wasPressed(),
-    yellowBtn.wasPressed(),
-    blueBtn.wasPressed()
+    greenBtn.wasPressed() && !blueGreenBtn.wasPressed(),
+    whiteBtn.wasPressed() && !blueWhiteBtn.wasPressed(),
+    yellowBtn.wasPressed() && !blueYellowBtn.wasPressed(),
+    blueBtn.wasPressed() && !blueYellowBtn.wasPressed() && !blueWhiteBtn.wasPressed() && !blueGreenBtn.wasPressed(),
+    blueGreenBtn.wasPressed(),
+    blueWhiteBtn.wasPressed(),
+    blueYellowBtn.wasPressed()
   };
 
   arePressed = {
-    greenBtn.isPressed(),
-    whiteBtn.isPressed(),
-    yellowBtn.isPressed(),
-    blueBtn.isPressed()
+    greenBtn.isPressed() && !blueGreenBtn.wasPressed(),
+    whiteBtn.isPressed() && !blueWhiteBtn.wasPressed(),
+    yellowBtn.isPressed() && !blueYellowBtn.wasPressed(),
+    blueBtn.isPressed() && !blueYellowBtn.wasPressed() && !blueWhiteBtn.wasPressed() && !blueGreenBtn.wasPressed(),
+    blueGreenBtn.isPressed(),
+    blueWhiteBtn.isPressed(),
+    blueYellowBtn.isPressed()
   };
 
   areReleased = {
-    greenBtn.isReleased(),
-    whiteBtn.isReleased(),
-    yellowBtn.isReleased(),
-    blueBtn.isReleased()
+    greenBtn.isReleased() && !blueGreenBtn.wasPressed(),
+    whiteBtn.isReleased() && !blueWhiteBtn.wasPressed(),
+    yellowBtn.isReleased() && !blueYellowBtn.wasPressed(),
+    blueBtn.isReleased() && !blueYellowBtn.wasPressed() && !blueWhiteBtn.wasPressed() && !blueGreenBtn.wasPressed(),
+    blueGreenBtn.isReleased(),
+    blueWhiteBtn.isReleased(),
+    blueYellowBtn.isReleased()
   };
 }
 
@@ -295,17 +326,17 @@ void showLights() {
     Serial.println("green");
   }
 
-  if(arePressed.green && arePressed.blue) {
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
+  if(arePressed.blueGreen) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 57, 59);
-  }
 
-  if(areReleased.green && areReleased.blue) {
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(areReleased.blueGreen) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
   }
 
-  if(werePressed.green && werePressed.blue) {
+  if(werePressed.blueGreen) {
     Serial.println("cyan");
   }
 
@@ -343,29 +374,11 @@ void showLights() {
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
-  // beginButtons();
-  blueBtn.begin();
-  greenBtn.begin();
-  blueGreenBtn.begin();
+  beginButtons();
 }
 
 void loop() {
-  blueGreenBtn.read();
-  blueBtn.read();
-  greenBtn.read();
-  if(blueGreenBtn.wasPressed()) {
-    Serial.println("blueGreenBtn");
-  }
-  if(!blueGreenBtn.wasPressed() && blueBtn.wasPressed()) {
-    Serial.println("blueBtn");
-  }
-  if(!blueGreenBtn.wasPressed() && greenBtn.wasPressed()) {
-    Serial.println("greenBtn");
-  }
-  // readButtons();
-  // updateStates();
-  // }
-
-  // showLights();
-
+  readButtons();
+  updateStates();
+  showLights();
 }
