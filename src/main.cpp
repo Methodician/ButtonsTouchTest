@@ -21,7 +21,9 @@
 #define BLUE_WIRE       1 // A7
 #define BLUE_PIXEL      4
 
-#define DEBOUNCE_TIME  90
+#define DEBOUNCE_TIME  25
+
+#define COMBO_OPPORTUNITY_TIME 200
 
 class Btn {
   public:
@@ -103,142 +105,42 @@ class Btn {
     uint32_t _lastChange; 
 };
 
-class ComboBtn {
-
-  public:
-    ComboBtn(
-      uint8_t pin1,
-      uint8_t pin2,
-      uint32_t dbTime=25,
-      uint8_t puEnable=true,
-      uint8_t invert=true)
-    : _pin1(pin1),
-      _pin2(pin2),
-      _dbTime(dbTime),
-      _puEnable(puEnable),
-      _invert(invert) {}
-
-    void begin() {
-      pinMode(_pin1, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
-      pinMode(_pin2, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
-      _state1 = digitalRead(_pin1);
-      _state2 = digitalRead(_pin2);
-      if (_invert) {
-        _state1 = !_state1;
-        _state2 = !_state2;
-      }
-      _time = millis();
-      _lastState1 = _state1;
-      _lastState2 = _state2;
-      _changed = false;
-      _lastChange = _time;
-    }
-
-    bool read() {
-      uint32_t ms = millis();
-      bool pinVal1 = digitalRead(_pin1);
-      bool pinVal2 = digitalRead(_pin2);
-      if (_invert) {
-        pinVal1 = !pinVal1;
-        pinVal2 = !pinVal2;
-      }
-      if (ms - _lastChange < _dbTime) {
-        _changed = false;
-      } else {
-        _lastState1 = _state1;
-        _lastState2 = _state2;
-        _state1 = pinVal1;
-        _state2 = pinVal2;
-        _changed = (_state1 != _lastState1) || (_state2 != _lastState2);
-        if (_changed) {
-          _lastChange = ms;
-        }
-      }
-      _time = ms;
-      return _state1 && _state2;
-    }
-
-    bool isPressed() {
-      return _state1 && _state2;
-    }
-
-    bool isReleased() {
-      return !_state1 && !_state2;
-    }
-
-    bool wasPressed() {
-      return _changed && _state1 && _state2;
-    }
-
-    bool wasReleased() {
-      return _changed && !_state1 && !_state2;
-    }
-
-    bool pressedFor(uint32_t ms) {
-      return _state1 && _state2 && _time - _lastChange >= ms;
-    }
-
-    bool releasedFor(uint32_t ms) {
-      return !_state1 && !_state2 && _time - _lastChange >= ms;
-    }
-
-    uint32_t lastChange() {
-      return _lastChange;
-    }
-
-  private:
-    uint8_t _pin1;
-    uint8_t _pin2;
-    uint32_t _dbTime;
-    bool _puEnable;
-    bool _invert;
-    bool _state1;
-    bool _state2;
-    bool _lastState1;
-    bool _lastState2;
-    bool _changed;
-    uint32_t _time;
-    uint32_t _lastChange;
-};
-
-
-
 struct Buttons {
   Btn green;
   Btn white;
   Btn yellow;
   Btn blue;
-  ComboBtn blueGreen;
-  ComboBtn blueWhite;
-  ComboBtn blueYellow;
 };
 
 Btn greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
 Btn whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
 Btn yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
 Btn blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
-ComboBtn blueGreenBtn(BLUE_WIRE, GREEN_WIRE, DEBOUNCE_TIME);
-ComboBtn blueWhiteBtn(BLUE_WIRE, WHITE_WIRE, DEBOUNCE_TIME);
-ComboBtn blueYellowBtn(BLUE_WIRE, YELLOW_WIRE, DEBOUNCE_TIME);
+
+
+struct RecentClicks {
+  boolean green;
+  boolean white;
+  boolean yellow;
+  boolean blue;
+};
+
+RecentClicks recentClicks = {green: false, white: false, yellow: false, blue: false};
 
 Buttons buttons = {
   greenBtn,
   whiteBtn,
   yellowBtn,
   blueBtn,
-  blueGreenBtn,
-  blueWhiteBtn,
-  blueYellowBtn,
 };
+
+unsigned long lastPressMillis = 0;
 
 void beginButtons() {
   greenBtn.begin();
   whiteBtn.begin();
   yellowBtn.begin();
   blueBtn.begin();
-  blueGreenBtn.begin();
-  blueWhiteBtn.begin();
-  blueYellowBtn.begin();
 }
 
 void readButtons() {
@@ -246,9 +148,6 @@ void readButtons() {
   whiteBtn.read();
   yellowBtn.read();
   blueBtn.read();
-  blueGreenBtn.read();
-  blueWhiteBtn.read();
-  blueYellowBtn.read();
 }
 
 void printMillis(){
@@ -257,28 +156,18 @@ void printMillis(){
 }
 
 void printClick() {
-  if(blueGreenBtn.wasPressed()) {
-    printMillis();
+  if(recentClicks.green && recentClicks.blue) {
     Serial.println("Cyan");
-  } else if(blueWhiteBtn.wasPressed()) {
-    printMillis();
-    Serial.println("Blue White");
-  } else if(blueYellowBtn.wasPressed()) {
-    printMillis();
-    Serial.println("Blue Yellow");
-  } else if(blueBtn.wasPressed()) {
-    printMillis();
-    Serial.println("Blue");
-  } else if(greenBtn.wasPressed()) {
-    printMillis();
+  } else if(recentClicks.green && recentClicks.white) {
+    Serial.println("Green and White");
+  } else if(recentClicks.green) {
     Serial.println("Green");
-  } else if(whiteBtn.wasPressed()) {
-    printMillis();
+  } else if(recentClicks.white) {
     Serial.println("White");
-  } else if(yellowBtn.wasPressed()) {
-    printMillis();
-    Serial.println("Yellow");
+  } else if(recentClicks.blue) {
+    Serial.println("Blue");
   }
+  recentClicks = { false, false, false, false };
 }
 
 void showLights() {
@@ -289,14 +178,14 @@ void showLights() {
     CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
   }
 
-  if(blueGreenBtn.isPressed()) {
+  if(greenBtn.isPressed() && blueBtn.isPressed()) {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 57, 59);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
 
   }
-  if(blueGreenBtn.isReleased()) {
+  if(greenBtn.isReleased() && blueBtn.isReleased()) {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
   }
 
   if(whiteBtn.isPressed()) {
@@ -321,7 +210,45 @@ void showLights() {
   }
 }
 
+void updateLastPress() {
+  if(
+    greenBtn.isPressed() ||
+    blueBtn.isPressed() ||
+    whiteBtn.isPressed() ||
+    yellowBtn.isPressed()
+    ) {
+    lastPressMillis = millis();
+  }
+}
+
+void updateRecentClicks() {
+  if(greenBtn.wasPressed()){
+    recentClicks.green = true;
+  }
+  if(blueBtn.wasPressed()){
+    recentClicks.blue = true;
+  }
+  if(whiteBtn.wasPressed()){
+    recentClicks.white = true;
+  }
+  if(yellowBtn.wasPressed()){
+    recentClicks.yellow = true;
+  }
+}
+
+void plotButtons() {
+  Serial.print(greenBtn.wasPressed());
+  Serial.print(", ");
+  Serial.print(whiteBtn.wasPressed());
+  Serial.print(", ");
+  Serial.print(yellowBtn.wasPressed());
+  Serial.print(", ");
+  Serial.print(blueBtn.wasPressed());
+  Serial.println();
+}
+
 void setup() {
+  lastPressMillis = millis();
   Serial.begin(9600);
   CircuitPlayground.begin();
   beginButtons();
@@ -329,6 +256,11 @@ void setup() {
 
 void loop() {
   readButtons();
+  updateRecentClicks();
+  updateLastPress();
   showLights();
-  printClick();
+  unsigned long timeSinceLastPress = millis() - lastPressMillis;
+  if(timeSinceLastPress > COMBO_OPPORTUNITY_TIME) {
+    printClick();
+  }
 }
