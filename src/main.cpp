@@ -315,6 +315,36 @@ void updateStates() {
   };
 }
 
+void printMillis(){
+  Serial.print(millis());
+  Serial.print(" ");
+}
+
+void printClick() {
+  if(blueGreenBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Cyan");
+  } else if(blueWhiteBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Blue White");
+  } else if(blueYellowBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Blue Yellow");
+  } else if(blueBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Blue");
+  } else if(greenBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Green");
+  } else if(whiteBtn.wasPressed()) {
+    printMillis();
+    Serial.println("White");
+  } else if(yellowBtn.wasPressed()) {
+    printMillis();
+    Serial.println("Yellow");
+  }
+}
+
 void showLights() {
   if(arePressed.green) {
     CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 71, 2);
@@ -322,9 +352,9 @@ void showLights() {
   if(areReleased.green) {
     CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
   }
-  if(werePressed.green) {
-    Serial.println("green");
-  }
+  // if(werePressed.green) {
+  //   Serial.println("green");
+  // }
 
   if(arePressed.blueGreen) {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
@@ -336,9 +366,9 @@ void showLights() {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
   }
 
-  if(werePressed.blueGreen) {
-    Serial.println("cyan");
-  }
+  // if(werePressed.blueGreen) {
+  //   Serial.println("cyan");
+  // }
 
   if(arePressed.white) {
     CircuitPlayground.setPixelColor(WHITE_PIXEL, 48, 48, 48);
@@ -346,9 +376,9 @@ void showLights() {
   if(areReleased.white) {
     CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
   }
-  if(werePressed.white) {
-    Serial.println("white");
-  }
+  // if(werePressed.white) {
+  //   Serial.println("white");
+  // }
 
   if(arePressed.yellow) {
     CircuitPlayground.setPixelColor(YELLOW_PIXEL, 71, 69, 0);
@@ -356,9 +386,9 @@ void showLights() {
   if(areReleased.yellow) {
     CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
   }
-  if(werePressed.yellow) {
-    Serial.println("yellow");
-  }
+  // if(werePressed.yellow) {
+  //   Serial.println("yellow");
+  // }
 
   if(arePressed.blue) {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 71);
@@ -366,9 +396,9 @@ void showLights() {
   if(areReleased.blue) {
     CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
   }
-  if(werePressed.blue) {
-    Serial.println("blue");
-  }
+  // if(werePressed.blue) {
+  //   Serial.println("blue");
+  // }
 }
 
 void setup() {
@@ -381,4 +411,5 @@ void loop() {
   readButtons();
   updateStates();
   showLights();
+  printClick();
 }
