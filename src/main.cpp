@@ -12,13 +12,13 @@
 
 
 
-#define GREEN_WIRE      3 // A4
+#define YELLOW_PIN     0 // A6
+#define BLUE_PIN       1 // A7
+#define WHITE_PIN      2 // A5
+#define GREEN_PIN      3 // A4
 #define GREEN_PIXEL     0
-#define WHITE_WIRE      2 // A5
 #define WHITE_PIXEL     1
-#define YELLOW_WIRE     0 // A6
 #define YELLOW_PIXEL    3
-#define BLUE_WIRE       1 // A7
 #define BLUE_PIXEL      4
 
 #define DEBOUNCE_TIME  25
@@ -87,118 +87,11 @@ class PinCatch {
     uint32_t _lastReadTime;     // time of last read
     uint32_t _lastChangeTime;   // time of last change
 };
-class Btn {
-  public:
-    Btn(
-      uint8_t pin,
-      uint32_t dbTime=25,
-      uint8_t puEnable=true,
-      uint8_t invert=true)
-    : _pin(pin),
-      _dbTime(dbTime),
-      _puEnable(puEnable),
-      _invert(invert) {}
 
-    void begin() {
-      pinMode(_pin, _puEnable ? INPUT_PULLUP : INPUT_PULLDOWN);
-      _state = digitalRead(_pin);
-      if (_invert) _state = !_state;
-      _time = millis();
-      _lastState = _state;
-      _changed = false;
-      _lastChange = _time;
-    }
-
-    bool read() {
-      uint32_t ms = millis();
-      bool pinVal = digitalRead(_pin);
-      if (_invert) pinVal = !pinVal;
-      if (ms - _lastChange < _dbTime) {
-        _changed = false;
-      } else {
-        _lastState = _state;
-        _state = pinVal;
-        _changed = (_state != _lastState);
-        if (_changed) {
-          _lastChange = ms;
-        }
-      }
-      _time = ms;
-      return _state;
-    }
-
-    bool isPressed() {
-      return _state;
-    }
-
-    bool isReleased() {
-      return !_state;
-    }
-
-    bool wasPressed() {
-      return _changed && _state;
-    }
-
-    bool wasReleased() {
-      return _changed && !_state;
-    }
-
-    bool pressedFor(uint32_t ms) {
-      return _state && _time - _lastChange >= ms;
-    }
-
-    bool releasedFor(uint32_t ms) {
-      return !_state && _time - _lastChange >= ms;
-    }
-
-    uint32_t lastChange() {
-      return _lastChange;
-    }
-
-  private:
-    uint8_t _pin;          // arduino pin number connected to button
-    uint32_t _dbTime;      // debounce time (ms)
-    bool _puEnable;        // internal pullup resistor enabled
-    bool _invert;          // if true, interpret logic low as pressed, else interpret logic high as pressed
-    bool _state;           // current button state, true=pressed
-    bool _lastState;       // previous button state
-    bool _changed;         // state changed since last read
-    uint32_t _time;        // time of current state (ms from millis)
-    uint32_t _lastChange; 
-};
-
-struct Buttons {
-  Btn green;
-  Btn white;
-  Btn yellow;
-  Btn blue;
-};
-
-Btn greenBtn(GREEN_WIRE, DEBOUNCE_TIME);
-Btn whiteBtn(WHITE_WIRE, DEBOUNCE_TIME);
-Btn yellowBtn(YELLOW_WIRE, DEBOUNCE_TIME);
-Btn blueBtn(BLUE_WIRE, DEBOUNCE_TIME);
-
-struct RecentClicks {
-  boolean green;
-  boolean white;
-  boolean yellow;
-  boolean blue;
-};
-
-RecentClicks recentClicks = {green: false, white: false, yellow: false, blue: false};
-
-Buttons buttons = {
-  greenBtn,
-  whiteBtn,
-  yellowBtn,
-  blueBtn,
-};
-
-PinCatch greenPin(GREEN_WIRE);
-PinCatch whitePin(WHITE_WIRE);
-PinCatch yellowPin(YELLOW_WIRE);
-PinCatch bluePin(BLUE_WIRE);
+PinCatch greenPin(GREEN_PIN);
+PinCatch whitePin(WHITE_PIN);
+PinCatch yellowPin(YELLOW_PIN);
+PinCatch bluePin(BLUE_PIN);
 
 struct RecentStates {
   bool green;
@@ -209,27 +102,88 @@ struct RecentStates {
 
 RecentStates recentStates = {green: false, white: false, yellow: false, blue: false};
 
-unsigned long lastActiveTime = 0;
 
-void beginButtons() {
-  greenBtn.begin();
-  whiteBtn.begin();
-  yellowBtn.begin();
-  blueBtn.begin();
-}
+class ComboCatch {
+  public:
+    ComboCatch(uint32_t opportunityDelay)
+      : _opportunityDelay(opportunityDelay){}
+
+    class ComboState {
+      public:
+        ComboState() {
+        }
+
+        void reset() {
+          for(int i = 0; i < 4; i++) {
+            _states[i] = false;
+          }
+        }
+
+        void setValue(const uint8_t index, const bool value) {
+          _states[index] = value;
+        }
+
+        bool getValue(const uint8_t index) {
+          return _states[index];
+        }
+
+      private:
+        bool _states [4] = {false, false, false, false};
+    };
+
+    bool getValue(const uint8_t index) {
+      return _state.getValue(index);
+    }
+
+    void begin() {
+      _lastActiveTime = millis();
+    }
+
+
+    // Let's keep it to a single purpose
+    void recordActivation() {
+      if(
+        greenPin.isActive() ||
+        whitePin.isActive() ||
+        yellowPin.isActive() ||
+        bluePin.isActive()
+        ){
+        _lastActiveTime = millis();
+      }
+    }
+
+    ComboState updateStates() {
+      if(greenPin.wasActive()) {
+        _state.setValue(GREEN_PIN, true);
+      }
+      if(whitePin.wasActive()) {
+        _state.setValue(WHITE_PIN, true);
+      }
+      if(yellowPin.wasActive()) {
+        _state.setValue(YELLOW_PIN, true);
+      }
+      if(bluePin.wasActive()) {
+        _state.setValue(BLUE_PIN, true);
+      }
+      return _state;
+    }
+
+  private:
+    uint32_t _opportunityDelay;
+    uint32_t _lastActiveTime;
+    ComboState _state;
+    ComboState _lastState;
+};
+
+ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
+
+unsigned long lastActiveTime = 0;
 
 void startPins() {
   greenPin.begin();
   whitePin.begin();
   yellowPin.begin();
   bluePin.begin();
-}
-
-void readButtons() {
-  greenBtn.read();
-  whiteBtn.read();
-  yellowBtn.read();
-  blueBtn.read();
 }
 
 void readPins() {
@@ -239,29 +193,9 @@ void readPins() {
   bluePin.read();
 }
 
-void printMillis(){
-  Serial.print(millis());
-  Serial.print(" ");
-}
-
-void printClick() {
-  if(recentClicks.green && recentClicks.blue) {
-    Serial.println("Cyan");
-  } else if(recentClicks.green && recentClicks.white) {
-    Serial.println("Green and White");
-  } else if(recentClicks.green) {
-    Serial.println("Green");
-  } else if(recentClicks.white) {
-    Serial.println("White");
-  } else if(recentClicks.blue) {
-    Serial.println("Blue");
-  }
-  recentClicks = { false, false, false, false };
-}
-
 // Could be replaced with a function that returns the key stroke based on combos
 void printComboState() {
-  if(recentStates.green && recentStates.white && recentStates.blue) {
+  if(comboCatch.getValue(GREEN_PIN) && comboCatch.getValue(WHITE_PIN) && comboCatch.getValue(BLUE_PIN)) {
     Serial.println("Green, White, and Blue");
   }
   if(recentStates.green && recentStates.blue){
@@ -345,17 +279,6 @@ void updateRecentStates() {
   }
 }
 
-void plotButtons() {
-  Serial.print(greenBtn.wasPressed());
-  Serial.print(", ");
-  Serial.print(whiteBtn.wasPressed());
-  Serial.print(", ");
-  Serial.print(yellowBtn.wasPressed());
-  Serial.print(", ");
-  Serial.print(blueBtn.wasPressed());
-  Serial.println();
-}
-
 void setup() {
   lastActiveTime = millis(); // try deleting this line
   Serial.begin(9600);
@@ -363,6 +286,7 @@ void setup() {
   startPins();
 }
 
+// Try interrupts some day
 void loop() {
   readPins();
   updateRecentStates();
