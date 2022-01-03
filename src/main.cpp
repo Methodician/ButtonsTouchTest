@@ -174,22 +174,22 @@ class ComboCatch {
       return isStateEqual(_state, sampleState);
     }
 
-    bool wasActive(bool sampleState [4]) {
-      if(_hasChanged) {
-        for(int i = 0; i < 4; i++) {
-          Serial.print(sampleState[i]);
-          Serial.print(" ");
-        }
-        Serial.println();
-        for(int i = 0; i < 4; i++) {
-          Serial.print(_state[i]);
-          Serial.print(" ");
-        }
-        Serial.println();
-        Serial.println("----------");
-      }
-      return _hasChanged && isStateEqual(_state, sampleState);
-    }
+    // bool wasActive(bool sampleState [4]) {
+    //   if(_hasChanged) {
+    //     for(int i = 0; i < 4; i++) {
+    //       Serial.print(sampleState[i]);
+    //       Serial.print(" ");
+    //     }
+    //     Serial.println();
+    //     for(int i = 0; i < 4; i++) {
+    //       Serial.print(_state[i]);
+    //       Serial.print(" ");
+    //     }
+    //     Serial.println();
+    //     Serial.println("----------");
+    //   }
+    //   return _hasChanged && isStateEqual(_state, sampleState);
+    // }
 
     void resetState() {
       for(uint8_t i = 0; i < 4; i++) {
@@ -200,29 +200,32 @@ class ComboCatch {
       }
     }
 
-
-    // I envision this not as bool but with a
-    // return value or possibly a keystroke output
-    // This would be the final "read & reset" type thing
     void outputState() {
-      // Here we can list all the possible combo states that
-      // would output one or more keystrokes
-      bool yellowState [4] = {true, false, false, false};
-      bool blueState [4] = {false, true, false, false};
-      bool whiteState [4] = {false, false, true, false};
-      bool greenState [4] = {false, false, false, true};
-      bool yellowBlueState [4] = {true, true, false, false};
+      
+      uint8_t yellowState =               0;
+      uint8_t blueState =                 1;
+      uint8_t whiteState =                2;
+      uint8_t greenState =                3;
+      uint8_t yellowBlueState =           4;
+      uint8_t yellowWhiteState =          5;
 
-      if(wasActive(yellowState)) {
-        Serial.println("Yellow");
-      } else if(wasActive(blueState)) {
-        Serial.println("Blue");
-      } else if(wasActive(whiteState)) {
-        Serial.println("White");
-      } else if(wasActive(greenState)) {
-        Serial.println("Green");
-      } else if(wasActive(yellowBlueState)) {
-        Serial.println("Yellow Blue");
+      char keyStrokes [6] = {'a', 'b', 'c', 'd', 'e', 'f'};
+
+      bool keyStates [6][4] = {
+        {true, false, false, false},     // Yellow
+        {false, true, false, false},     // Blue
+        {false, false, true, false},     // White
+        {false, false, false, true},     // Green
+        {true, true, false, false},      // Yellow + Blue
+        {true, false, true, false}       // Yellow + White
+      };
+
+      if(_hasChanged) {
+        for(uint8_t i = 0; i < 6; i++) {
+          if(isStateEqual(_state, keyStates[i])) {
+            Serial.println(keyStrokes[i]);
+          }
+        }
       }
 
       // Maybe only do this if one of the states above is true?
