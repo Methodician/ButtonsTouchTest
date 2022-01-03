@@ -191,6 +191,47 @@ class ComboCatch {
       return _hasChanged && isStateEqual(_state, sampleState);
     }
 
+    void resetState() {
+      for(uint8_t i = 0; i < 4; i++) {
+        _state[i] = false;
+      }
+      for(uint8_t i = 0; i < 4; i++) {
+        _lastState[i] = false;
+      }
+    }
+
+
+    // I envision this not as bool but with a
+    // return value or possibly a keystroke output
+    // This would be the final "read & reset" type thing
+    void outputState() {
+      // Here we can list all the possible combo states that
+      // would output one or more keystrokes
+      bool yellowState [4] = {true, false, false, false};
+      bool blueState [4] = {false, true, false, false};
+      bool whiteState [4] = {false, false, true, false};
+      bool greenState [4] = {false, false, false, true};
+      bool yellowBlueState [4] = {true, true, false, false};
+
+      if(wasActive(yellowState)) {
+        Serial.println("Yellow");
+      } else if(wasActive(blueState)) {
+        Serial.println("Blue");
+      } else if(wasActive(whiteState)) {
+        Serial.println("White");
+      } else if(wasActive(greenState)) {
+        Serial.println("Green");
+      } else if(wasActive(yellowBlueState)) {
+        Serial.println("Yellow Blue");
+      }
+
+      // Maybe only do this if one of the states above is true?
+      if(millis() - _lastActiveTime > _opportunityDelay){
+        resetState();
+      }
+
+    }
+
 
   private:
     uint32_t _opportunityDelay;
@@ -324,21 +365,6 @@ void loop() {
   comboCatch.recordActivation();
   comboCatch.read();
 
-  bool yellowState [4] = {true, false, false, false};
-  bool blueState [4] = {false, true, false, false};
-  bool whiteState [4] = {false, false, true, false};
-  bool greenState [4] = {false, false, false, true};
-  if(comboCatch.wasActive(yellowState)) {
-    Serial.println("Yellow");
-  }
-  if(comboCatch.wasActive(blueState)) {
-    Serial.println("Blue");
-  }
-  if(comboCatch.wasActive(whiteState)) {
-    Serial.println("White");
-  }
-  if(comboCatch.wasActive(greenState)) {
-    Serial.println("Green");
-  }
+  comboCatch.outputState();
   
 }
