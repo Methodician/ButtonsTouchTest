@@ -23,7 +23,7 @@
 
 #define DEBOUNCE_TIME  25
 
-#define COMBO_OPPORTUNITY_TIME 200
+#define COMBO_OPPORTUNITY_TIME 800
 
 class PinCatch {
 
@@ -108,71 +108,103 @@ class ComboCatch {
     ComboCatch(uint32_t opportunityDelay)
       : _opportunityDelay(opportunityDelay){}
 
-    class ComboState {
-      public:
-        ComboState() {
-        }
-
-        void reset() {
-          for(int i = 0; i < 4; i++) {
-            _states[i] = false;
-          }
-        }
-
-        void setValue(const uint8_t index, const bool value) {
-          _states[index] = value;
-        }
-
-        bool getValue(const uint8_t index) {
-          return _states[index];
-        }
-
-      private:
-        bool _states [4] = {false, false, false, false};
-    };
-
-    bool getValue(const uint8_t index) {
-      return _state.getValue(index);
-    }
 
     void begin() {
       _lastActiveTime = millis();
+      _hasChanged = false;
+    }
+
+    bool getPinVal(const uint8_t index) {
+      // return _comboState.getPinVal(index);
+      return _state[index];
     }
 
 
-    // Let's keep it to a single purpose
+    void catchPins() {
+      for(uint8_t i = 0; i < 4; i++) {
+        _pinCatchers[i].read();
+      }
+    }
+
     void recordActivation() {
-      if(
-        greenPin.isActive() ||
-        whitePin.isActive() ||
-        yellowPin.isActive() ||
-        bluePin.isActive()
-        ){
-        _lastActiveTime = millis();
+      for(uint8_t i = 0; i < 4; i++) {
+        if(_pinCatchers[i].isActive()) {
+          _lastActiveTime = millis();
+          break; // opposite is "continue"?
+        }
       }
     }
 
-    ComboState updateStates() {
-      if(greenPin.wasActive()) {
-        _state.setValue(GREEN_PIN, true);
+    void reassignState(bool targetState [4], bool sourceState [4]) {
+      for(uint8_t i = 0; i < 4; i++) {
+        targetState[i] = sourceState[i];
       }
-      if(whitePin.wasActive()) {
-        _state.setValue(WHITE_PIN, true);
-      }
-      if(yellowPin.wasActive()) {
-        _state.setValue(YELLOW_PIN, true);
-      }
-      if(bluePin.wasActive()) {
-        _state.setValue(BLUE_PIN, true);
-      }
-      return _state;
     }
+
+    bool isStateEqual(bool state1 [4], bool state2 [4]) {
+      for(uint8_t i = 0; i < 4; i++) {
+        if(state1[i] != state2[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    void read() {
+      uint32_t ms = millis();
+
+      for(uint8_t i = 0; i < 4; i++) {
+        if(_pinCatchers[i].wasActive()) {
+          _state[i] = true;
+        }
+      }
+      
+      if(ms - _lastActiveTime < _opportunityDelay) {
+        _hasChanged = false;
+      } else {
+        _hasChanged = !isStateEqual(_lastState, _state );
+        if(_hasChanged) {
+          reassignState(_lastState, _state);
+          _lastChangeTime = ms;
+        }
+      }
+    }
+
+    bool isActive(bool sampleState [4]) {
+      return isStateEqual(_state, sampleState);
+    }
+
+    bool wasActive(bool sampleState [4]) {
+      if(_hasChanged) {
+        for(int i = 0; i < 4; i++) {
+          Serial.print(sampleState[i]);
+          Serial.print(" ");
+        }
+        Serial.println();
+        for(int i = 0; i < 4; i++) {
+          Serial.print(_state[i]);
+          Serial.print(" ");
+        }
+        Serial.println();
+        Serial.println("----------");
+      }
+      return _hasChanged && isStateEqual(_state, sampleState);
+    }
+
 
   private:
     uint32_t _opportunityDelay;
     uint32_t _lastActiveTime;
-    ComboState _state;
-    ComboState _lastState;
+    uint32_t _lastChangeTime;
+    bool _state [4] = {false, false, false, false};
+    bool _lastState [4] = {false, false, false, false};
+    bool _hasChanged = false;
+    PinCatch _pinCatchers[4] = {
+      PinCatch(YELLOW_PIN),
+      PinCatch(BLUE_PIN),
+      PinCatch(WHITE_PIN),
+      PinCatch(GREEN_PIN)
+    };
 };
 
 ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
@@ -195,9 +227,6 @@ void readPins() {
 
 // Could be replaced with a function that returns the key stroke based on combos
 void printComboState() {
-  if(comboCatch.getValue(GREEN_PIN) && comboCatch.getValue(WHITE_PIN) && comboCatch.getValue(BLUE_PIN)) {
-    Serial.println("Green, White, and Blue");
-  }
   if(recentStates.green && recentStates.blue){
     Serial.println("Green and Blue");
   } else if(recentStates.green && recentStates.white){
@@ -284,16 +313,32 @@ void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
   startPins();
+  // new way?
+  comboCatch.begin();
+
 }
 
 // Try interrupts some day
 void loop() {
-  readPins();
-  updateRecentStates();
-  updateLastActiveTime();
-  showLights();
-  unsigned long timeSinceLastPress = millis() - lastActiveTime;
-  if(timeSinceLastPress > COMBO_OPPORTUNITY_TIME) {
-    printComboState();
+  comboCatch.catchPins();
+  comboCatch.recordActivation();
+  comboCatch.read();
+
+  bool yellowState [4] = {true, false, false, false};
+  bool blueState [4] = {false, true, false, false};
+  bool whiteState [4] = {false, false, true, false};
+  bool greenState [4] = {false, false, false, true};
+  if(comboCatch.wasActive(yellowState)) {
+    Serial.println("Yellow");
   }
+  if(comboCatch.wasActive(blueState)) {
+    Serial.println("Blue");
+  }
+  if(comboCatch.wasActive(whiteState)) {
+    Serial.println("White");
+  }
+  if(comboCatch.wasActive(greenState)) {
+    Serial.println("Green");
+  }
+  
 }
