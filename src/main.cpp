@@ -88,21 +88,6 @@ class PinCatch {
     uint32_t _lastChangeTime;   // time of last change
 };
 
-PinCatch greenPin(GREEN_PIN);
-PinCatch whitePin(WHITE_PIN);
-PinCatch yellowPin(YELLOW_PIN);
-PinCatch bluePin(BLUE_PIN);
-
-struct RecentStates {
-  bool green;
-  bool white;
-  bool yellow;
-  bool blue;
-};
-
-RecentStates recentStates = {green: false, white: false, yellow: false, blue: false};
-
-
 class ComboCatch {
   public:
     ComboCatch(uint32_t opportunityDelay)
@@ -211,6 +196,7 @@ class ComboCatch {
 
       char keyStrokes [6] = {'a', 'b', 'c', 'd', 'e', 'f'};
 
+      // Search me with hash functions?
       bool keyStates [6][4] = {
         {true, false, false, false},     // Yellow
         {false, true, false, false},     // Blue
@@ -253,113 +239,50 @@ class ComboCatch {
 
 ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
 
-unsigned long lastActiveTime = 0;
-
-void startPins() {
-  greenPin.begin();
-  whitePin.begin();
-  yellowPin.begin();
-  bluePin.begin();
-}
-
-void readPins() {
-  greenPin.read();
-  whitePin.read();
-  yellowPin.read();
-  bluePin.read();
-}
-
-// Could be replaced with a function that returns the key stroke based on combos
-void printComboState() {
-  if(recentStates.green && recentStates.blue){
-    Serial.println("Green and Blue");
-  } else if(recentStates.green && recentStates.white){
-    Serial.println("Green and White");
-  } else if(recentStates.green){
-    Serial.println("Green");
-  } else if(recentStates.white){
-    Serial.println("White");
-  } else if(recentStates.blue){
-    Serial.println("Blue");
-  }
-
-  recentStates = { false, false, false, false };
-}
-
 void showLights() {
-  if(greenPin.isActive()) {
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 71, 2);
-  } 
-  if(greenPin.isInactive()) {
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
-  }
+  // if(greenPin.isActive()) {
+  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 71, 2);
+  // } 
+  // if(greenPin.isInactive()) {
+  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  // }
 
-  if(greenPin.isActive() && bluePin.isActive()) {
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
+  // if(greenPin.isActive() && bluePin.isActive()) {
+  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
+  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
 
-  }
-  if(greenPin.isInactive() && bluePin.isInactive()) {
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
-    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
-  }
+  // }
+  // if(greenPin.isInactive() && bluePin.isInactive()) {
+  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  // }
 
-  if(whitePin.isActive()) {
-    CircuitPlayground.setPixelColor(WHITE_PIXEL, 48, 48, 48);
-  }
-  if(whitePin.isInactive()) {
-    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
-  }
+  // if(whitePin.isActive()) {
+  //   CircuitPlayground.setPixelColor(WHITE_PIXEL, 48, 48, 48);
+  // }
+  // if(whitePin.isInactive()) {
+  //   CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  // }
 
-  if(yellowPin.isActive()) {
-    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 71, 69, 0);
-  }
-  if(yellowPin.isInactive()) {
-    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
-  }
+  // if(yellowPin.isActive()) {
+  //   CircuitPlayground.setPixelColor(YELLOW_PIXEL, 71, 69, 0);
+  // }
+  // if(yellowPin.isInactive()) {
+  //   CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+  // }
 
-  if(bluePin.isActive()) {
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 71);
-  }
-  if(bluePin.isInactive()) {
-    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
-  }
-}
-
-void updateLastActiveTime() {
-  if(
-    greenPin.isActive() ||
-    bluePin.isActive() ||
-    whitePin.isActive() ||
-    yellowPin.isActive()
-    ) {
-    lastActiveTime = millis();
-  }
-}
-
-void updateRecentStates() {
-  if(greenPin.wasActive()){
-    recentStates.green = true;
-  }
-  if(bluePin.wasActive()){
-    recentStates.blue = true;
-  }
-  if(whitePin.wasActive()){
-    recentStates.white = true;
-  }
-  if(yellowPin.wasActive()){
-    recentStates.yellow = true;
-  }
+  // if(bluePin.isActive()) {
+  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 71);
+  // }
+  // if(bluePin.isInactive()) {
+  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  // }
 }
 
 void setup() {
-  lastActiveTime = millis(); // try deleting this line
   Serial.begin(9600);
   CircuitPlayground.begin();
-  startPins();
-  // new way?
   comboCatch.begin();
-
 }
 
 // Try interrupts some day
