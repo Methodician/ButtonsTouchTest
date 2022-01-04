@@ -97,6 +97,9 @@ class ComboCatch {
     void begin() {
       _lastActiveTime = millis();
       _hasChanged = false;
+      for(uint8_t i = 0; i < 4; i++) {
+        _pinCatchers[i].begin();
+      }
     }
 
     bool getPinVal(const uint8_t index) {
@@ -186,30 +189,10 @@ class ComboCatch {
     }
 
     void outputState() {
-      
-      uint8_t yellowState =               0;
-      uint8_t blueState =                 1;
-      uint8_t whiteState =                2;
-      uint8_t greenState =                3;
-      uint8_t yellowBlueState =           4;
-      uint8_t yellowWhiteState =          5;
-
-      char keyStrokes [6] = {'a', 'b', 'c', 'd', 'e', 'f'};
-
-      // Search me with hash functions?
-      bool keyStates [6][4] = {
-        {true, false, false, false},     // Yellow
-        {false, true, false, false},     // Blue
-        {false, false, true, false},     // White
-        {false, false, false, true},     // Green
-        {true, true, false, false},      // Yellow + Blue
-        {true, false, true, false}       // Yellow + White
-      };
-
       if(_hasChanged) {
         for(uint8_t i = 0; i < 6; i++) {
-          if(isStateEqual(_state, keyStates[i])) {
-            Serial.println(keyStrokes[i]);
+          if(isStateEqual(_state, _keyStates[i])) {
+            Serial.println(_keyStrokes[i]);
           }
         }
       }
@@ -223,6 +206,24 @@ class ComboCatch {
 
 
   private:
+    // Search me with hash functions?
+    bool _keyStates [6][4] = {
+      {true, false, false, false},     // Yellow
+      {false, true, false, false},     // Blue
+      {false, false, true, false},     // White
+      {false, false, false, true},     // Green
+      {true, true, false, false},      // Yellow + Blue
+      {true, false, true, false}       // Yellow + White
+    };
+    uint8_t _yellowState =               0;
+    uint8_t _blueState =                 1;
+    uint8_t _whiteState =                2;
+    uint8_t _greenState =                3;
+    uint8_t _yellowBlueState =           4;
+    uint8_t _yellowWhiteState =          5;
+    const char _keyStrokes [6] = {'a', 'b', 'c', 'd', 'e', 'f'};
+
+
     uint32_t _opportunityDelay;
     uint32_t _lastActiveTime;
     uint32_t _lastChangeTime;
@@ -238,6 +239,7 @@ class ComboCatch {
 };
 
 ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
+
 
 void showLights() {
   // if(greenPin.isActive()) {
@@ -282,6 +284,7 @@ void showLights() {
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
+
   comboCatch.begin();
 }
 
@@ -292,5 +295,4 @@ void loop() {
   comboCatch.read();
 
   comboCatch.outputState();
-  
 }
