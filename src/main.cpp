@@ -25,6 +25,9 @@
 
 #define COMBO_OPPORTUNITY_TIME 800
 
+#define NUMBER_OF_COMBOS 15
+#define NUMBER_OF_PINS 4
+
 class PinCatch {
 
   public:
@@ -97,19 +100,19 @@ class ComboCatch {
     void begin() {
       _lastActiveTime = millis();
       _hasChanged = false;
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _pinCatchers[i].begin();
       }
     }
 
     void catchPins() {
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _pinCatchers[i].read();
       }
     }
 
     void recordActivation() {
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         if(_pinCatchers[i].isActive()) {
           _lastActiveTime = millis();
           break; // opposite is "continue"?
@@ -117,14 +120,14 @@ class ComboCatch {
       }
     }
 
-    void reassignState(bool targetState [4], bool sourceState [4]) {
-      for(uint8_t i = 0; i < 4; i++) {
+    void reassignState(bool targetState [NUMBER_OF_PINS], bool sourceState [NUMBER_OF_PINS]) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         targetState[i] = sourceState[i];
       }
     }
 
-    bool isStateEqual(bool state1 [4], bool state2 [4]) {
-      for(uint8_t i = 0; i < 4; i++) {
+    bool isStateEqual(bool state1 [NUMBER_OF_PINS], bool state2 [NUMBER_OF_PINS]) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         if(state1[i] != state2[i]) {
           return false;
         }
@@ -135,7 +138,7 @@ class ComboCatch {
     void read() {
       uint32_t ms = millis();
 
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         if(_pinCatchers[i].wasActive()) {
           _state[i] = true;
         }
@@ -152,19 +155,19 @@ class ComboCatch {
       }
     }
 
-    bool isActive(bool sampleState [4]) {
+    bool isActive(bool sampleState [NUMBER_OF_PINS]) {
       return isStateEqual(_state, sampleState);
     }
 
-    bool wasActive(bool sampleState [4]) {
+    bool wasActive(bool sampleState [NUMBER_OF_PINS]) {
       return _hasChanged && isStateEqual(_state, sampleState);
     }
 
     void resetState() {
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _state[i] = false;
       }
-      for(uint8_t i = 0; i < 4; i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _lastState[i] = false;
       }
     }
@@ -178,7 +181,7 @@ class ComboCatch {
       //     }
       //   }
       // }
-      for(uint8_t i = 0; i < sizeof(_keyStrokes)/sizeof(char); i++) {
+      for(uint8_t i = 0; i < NUMBER_OF_COMBOS; i++) {
         if(wasActive(_keyStates[i])) {
           Serial.println(_keyStrokes[i]);
         }
@@ -194,7 +197,7 @@ class ComboCatch {
 
   private:
     // Search me with hash functions?
-    bool _keyStates [15][4] = {
+    bool _keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
       {true, false, false, false},     // Yellow
       {false, true, false, false},     // Blue
       {false, false, true, false},     // White
@@ -212,15 +215,15 @@ class ComboCatch {
       {true, true, true, true},        // Yellow + Blue + White + Green
 
     };
-    const char _keyStrokes [15] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
+    const char _keyStrokes [NUMBER_OF_COMBOS] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
 
     uint32_t _opportunityDelay;
     uint32_t _lastActiveTime;
     uint32_t _lastChangeTime;
-    bool _state [4] = {false, false, false, false};
-    bool _lastState [4] = {false, false, false, false};
+    bool _state [NUMBER_OF_PINS] = {false, false, false, false};
+    bool _lastState [NUMBER_OF_PINS] = {false, false, false, false};
     bool _hasChanged = false;
-    PinCatch _pinCatchers[4] = {
+    PinCatch _pinCatchers[NUMBER_OF_PINS] = {
       PinCatch(YELLOW_PIN),
       PinCatch(BLUE_PIN),
       PinCatch(WHITE_PIN),
