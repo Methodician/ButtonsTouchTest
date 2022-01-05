@@ -102,12 +102,6 @@ class ComboCatch {
       }
     }
 
-    bool getPinVal(const uint8_t index) {
-      // return _comboState.getPinVal(index);
-      return _state[index];
-    }
-
-
     void catchPins() {
       for(uint8_t i = 0; i < 4; i++) {
         _pinCatchers[i].read();
@@ -162,22 +156,9 @@ class ComboCatch {
       return isStateEqual(_state, sampleState);
     }
 
-    // bool wasActive(bool sampleState [4]) {
-    //   if(_hasChanged) {
-    //     for(int i = 0; i < 4; i++) {
-    //       Serial.print(sampleState[i]);
-    //       Serial.print(" ");
-    //     }
-    //     Serial.println();
-    //     for(int i = 0; i < 4; i++) {
-    //       Serial.print(_state[i]);
-    //       Serial.print(" ");
-    //     }
-    //     Serial.println();
-    //     Serial.println("----------");
-    //   }
-    //   return _hasChanged && isStateEqual(_state, sampleState);
-    // }
+    bool wasActive(bool sampleState [4]) {
+      return _hasChanged && isStateEqual(_state, sampleState);
+    }
 
     void resetState() {
       for(uint8_t i = 0; i < 4; i++) {
@@ -189,11 +170,17 @@ class ComboCatch {
     }
 
     void outputState() {
-      if(_hasChanged) {
-        for(uint8_t i = 0; i < 6; i++) {
-          if(isStateEqual(_state, _keyStates[i])) {
-            Serial.println(_keyStrokes[i]);
-          }
+      // This might be more performant because it only loops after delay
+      // if(_hasChanged) {
+      //   for(uint8_t i = 0; i < 6; i++) {
+      //     if(isActive(_keyStates[i])) {
+      //       Serial.println(_keyStrokes[i]);
+      //     }
+      //   }
+      // }
+      for(uint8_t i = 0; i < sizeof(_keyStrokes)/sizeof(char); i++) {
+        if(wasActive(_keyStates[i])) {
+          Serial.println(_keyStrokes[i]);
         }
       }
 
@@ -207,22 +194,25 @@ class ComboCatch {
 
   private:
     // Search me with hash functions?
-    bool _keyStates [6][4] = {
+    bool _keyStates [15][4] = {
       {true, false, false, false},     // Yellow
       {false, true, false, false},     // Blue
       {false, false, true, false},     // White
       {false, false, false, true},     // Green
       {true, true, false, false},      // Yellow + Blue
-      {true, false, true, false}       // Yellow + White
-    };
-    uint8_t _yellowState =               0;
-    uint8_t _blueState =                 1;
-    uint8_t _whiteState =                2;
-    uint8_t _greenState =                3;
-    uint8_t _yellowBlueState =           4;
-    uint8_t _yellowWhiteState =          5;
-    const char _keyStrokes [6] = {'a', 'b', 'c', 'd', 'e', 'f'};
+      {true, false, true, false},      // Yellow + White
+      {true, false, false, true},      // Yellow + Green
+      {false, true, true, false},      // Blue + White
+      {false, true, false, true},      // Blue + Green
+      {false, false, true, true},      // White + Green
+      {true, true, true, false},       // Yellow + Blue + White  
+      {true, true, false, true},       // Yellow + Blue + Green
+      {true, false, true, true},       // Yellow + White + Green
+      {false, true, true, true},       // Blue + White + Green
+      {true, true, true, true},        // Yellow + Blue + White + Green
 
+    };
+    const char _keyStrokes [15] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
 
     uint32_t _opportunityDelay;
     uint32_t _lastActiveTime;
