@@ -111,9 +111,17 @@ class ComboCatch {
       }
     }
 
-    bool isStateEqual(bool state1 [NUMBER_OF_PINS], bool state2 [NUMBER_OF_PINS]) {
+    
+    void resetState() {
       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
-        if(state1[i] != state2[i]) {
+        _state[i] = false;
+        _lastState[i] = false;
+      }
+    }
+
+    bool isStateEqual(bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBER_OF_PINS]) {
+      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+        if(sampleState[i] != testState[i]) {
           return false;
         }
       }
@@ -133,81 +141,35 @@ class ComboCatch {
         }
       }
       
-      if(ms - _lastActiveTime < _opportunityDelay) {
-        _hasChanged = false;
-      } else {
-        _hasChanged = !isStateEqual(_lastState, _state );
-        if(_hasChanged) {
-          reassignState(_lastState, _state);
-          _lastChangeTime = ms;
-        }
-      }
-    }
-
-    bool isActive(bool sampleState [NUMBER_OF_PINS]) {
-      return isStateEqual(_state, sampleState);
-    }
-
-    bool wasActive(bool sampleState [NUMBER_OF_PINS]) {
-      return _hasChanged && isStateEqual(_state, sampleState);
-    }
-
-    void resetState() {
-      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
-        _state[i] = false;
-        _lastState[i] = false;
-      }
-    }
-
-    void outputState() {
-      // This might be more performant because it only loops after delay
-      // if(_hasChanged) {
-      //   for(uint8_t i = 0; i < 6; i++) {
-      //     if(isActive(_keyStates[i])) {
-      //       Serial.println(_keyStrokes[i]);
-      //     }
-      //   }
-      // }
-      for(uint8_t i = 0; i < NUMBER_OF_COMBOS; i++) {
-        if(wasActive(_keyStates[i])) {
-          Serial.println(_keyStrokes[i]);
-        }
-      }
-
-      // Maybe only do this if one of the states above is true?
-      // wasActive will only be true if this comes to pass.
-      if(millis() - _lastActiveTime > _opportunityDelay){
+      // If opportunity time passed last loop, reset.
+      if(ms - _lastActiveTime > _opportunityDelay + 10) {
         resetState();
       }
 
+      // If within opportunity time, do nothing.
+      if(ms - _lastActiveTime < _opportunityDelay) {
+        _hasChanged = false;
+      } else {
+        // If opportunity time has passed, check for changes
+        _hasChanged = !isStateEqual(_lastState, _state );
+        if(_hasChanged) {
+          // Is this really necessary?
+          reassignState(_lastState, _state);
+        }
+      }
     }
 
+    bool isActive(const bool testState [NUMBER_OF_PINS]) {
+      return isStateEqual(_state, testState);
+    }
+
+    bool wasActive(const bool testState [NUMBER_OF_PINS]) {
+      return _hasChanged && isActive(testState);
+    }
 
   private:
-    // Search me with hash functions?
-    bool _keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
-      {true, false, false, false},     // Yellow
-      {false, true, false, false},     // Blue
-      {false, false, true, false},     // White
-      {false, false, false, true},     // Green
-      {true, true, false, false},      // Yellow + Blue
-      {true, false, true, false},      // Yellow + White
-      {true, false, false, true},      // Yellow + Green
-      {false, true, true, false},      // Blue + White
-      {false, true, false, true},      // Blue + Green
-      {false, false, true, true},      // White + Green
-      {true, true, true, false},       // Yellow + Blue + White  
-      {true, true, false, true},       // Yellow + Blue + Green
-      {true, false, true, true},       // Yellow + White + Green
-      {false, true, true, true},       // Blue + White + Green
-      {true, true, true, true},        // Yellow + Blue + White + Green
-
-    };
-    const char _keyStrokes [NUMBER_OF_COMBOS] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
-
     uint32_t _opportunityDelay;
     uint32_t _lastActiveTime;
-    uint32_t _lastChangeTime;
     bool _state [NUMBER_OF_PINS] = {false, false, false, false};
     bool _lastState [NUMBER_OF_PINS] = {false, false, false, false};
     bool _hasChanged = false;
@@ -221,6 +183,35 @@ class ComboCatch {
 
 ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
 
+char activeKey() {
+  // Search me with hash functions?
+  const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
+    {true, false, false, false},     // Yellow
+    {false, true, false, false},     // Blue
+    {false, false, true, false},     // White
+    {false, false, false, true},     // Green
+    {true, true, false, false},      // Yellow + Blue
+    {true, false, true, false},      // Yellow + White
+    {true, false, false, true},      // Yellow + Green
+    {false, true, true, false},      // Blue + White
+    {false, true, false, true},      // Blue + Green
+    {false, false, true, true},      // White + Green
+    {true, true, true, false},       // Yellow + Blue + White  
+    {true, true, false, true},       // Yellow + Blue + Green
+    {true, false, true, true},       // Yellow + White + Green
+    {false, true, true, true},       // Blue + White + Green
+    {true, true, true, true},        // Yellow + Blue + White + Green
+  };
+  const char keyStrokes [NUMBER_OF_COMBOS] = 
+    {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'}; 
+
+  for(uint32_t i = 0; i < NUMBER_OF_COMBOS; i++) {
+    if(comboCatch.wasActive(keyStates[i])) {
+      return keyStrokes[i];
+    }
+  }
+  return NULL;
+}
 
 void showLights() {
   // if(greenPin.isActive()) {
@@ -272,5 +263,8 @@ void setup() {
 // Try interrupts some day
 void loop() {
   comboCatch.read();
-  comboCatch.outputState();
+  const char keyStroke = activeKey();
+  if(keyStroke != NULL) {
+    Serial.println(keyStroke);
+  }
 }
