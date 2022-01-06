@@ -105,21 +105,6 @@ class ComboCatch {
       }
     }
 
-    void catchPins() {
-      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
-        _pinCatchers[i].read();
-      }
-    }
-
-    void recordActivation() {
-      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
-        if(_pinCatchers[i].isActive()) {
-          _lastActiveTime = millis();
-          break; // opposite is "continue"?
-        }
-      }
-    }
-
     void reassignState(bool targetState [NUMBER_OF_PINS], bool sourceState [NUMBER_OF_PINS]) {
       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         targetState[i] = sourceState[i];
@@ -139,6 +124,10 @@ class ComboCatch {
       uint32_t ms = millis();
 
       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+        _pinCatchers[i].read();
+        if(_pinCatchers[i].isActive()) {
+          _lastActiveTime = ms;
+        }
         if(_pinCatchers[i].wasActive()) {
           _state[i] = true;
         }
@@ -166,8 +155,6 @@ class ComboCatch {
     void resetState() {
       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _state[i] = false;
-      }
-      for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
         _lastState[i] = false;
       }
     }
@@ -188,6 +175,7 @@ class ComboCatch {
       }
 
       // Maybe only do this if one of the states above is true?
+      // wasActive will only be true if this comes to pass.
       if(millis() - _lastActiveTime > _opportunityDelay){
         resetState();
       }
@@ -283,9 +271,6 @@ void setup() {
 
 // Try interrupts some day
 void loop() {
-  comboCatch.catchPins();
-  comboCatch.recordActivation();
   comboCatch.read();
-
   comboCatch.outputState();
 }
