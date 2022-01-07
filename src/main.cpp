@@ -28,39 +28,36 @@
 #define NUMBER_OF_COMBOS 15
 #define NUMBER_OF_PINS 4
 
-volatile bool yellowState = false;
-volatile bool blueState = false;
-volatile bool whiteState = false;
-volatile bool greenState = false;
+volatile bool comboState [NUMBER_OF_PINS] = {false, false, false, false};
 
 uint32_t lastKeyoutMs = 0;
 
-void yellowIsr() {
-  if(!digitalRead(YELLOW_PIN)) {
-    yellowState = true;
+uint32_t lastPinReads [NUMBER_OF_PINS] = {0, 0, 0, 0};
+
+void mergedIsr(byte pin){
+  uint32_t now = millis();
+  if(!comboState[pin] && !digitalRead(pin) && now - lastPinReads[pin] > DEBOUNCE_TIME){
+    lastPinReads[pin] = now;
+    comboState[pin] = true;
   }
+}
+void yellowIsr() {
+  mergedIsr(YELLOW_PIN);
 }
 void blueIsr() {
-  if(!digitalRead(BLUE_PIN)) {
-    blueState = true;
-  }
+  mergedIsr(BLUE_PIN);
 }
 void whiteIsr() {
-  if(!digitalRead(WHITE_PIN)) {
-    whiteState = true;
-  }
+  mergedIsr(WHITE_PIN);
 }
 void greenIsr() {
-  if(!digitalRead(GREEN_PIN)) {
-    greenState = true;
-  }
+  mergedIsr(GREEN_PIN);
 }
 
 void resetStates() {
-  yellowState = false;
-  blueState = false;
-  whiteState = false;
-  greenState = false;
+  for(int i = 0; i < NUMBER_OF_PINS; i++) {
+    comboState[i] = false;
+  }
 }
 
 
@@ -82,8 +79,8 @@ const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
   {true, true, true, true},        // Yellow + Blue + White + Green
 };
 
-bool isStateEqual(bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBER_OF_PINS]) {
-  for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+bool isStateEqual(volatile bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBER_OF_PINS]) {
+  for(byte i = 0; i < NUMBER_OF_PINS; i++) {
     if(sampleState[i] != testState[i]) {
       return false;
     }
@@ -91,15 +88,24 @@ bool isStateEqual(bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBE
   return true;
 }
 
-char printKey() {
+int comboMatchIndex() {
+  int index = -1;
+  for(int i = 0; i < NUMBER_OF_COMBOS; i++) {
+    if(isStateEqual(comboState, keyStates[i])) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
+void printKey() {
   const char keyStrokes [NUMBER_OF_COMBOS] = 
     {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'}; 
-  bool sampleState [NUMBER_OF_PINS] = {yellowState, blueState, whiteState, greenState};
 
-  for(uint8_t i = 0; i < NUMBER_OF_COMBOS; i++) {
-    if(isStateEqual(sampleState, keyStates[i])) {
-      Serial.println(keyStrokes[i]);
-    }
+  const int keyIndex = comboMatchIndex();
+  if(keyIndex != -1) {
+    Serial.println(keyStrokes[keyIndex]);
   }
 }
 
@@ -111,31 +117,31 @@ void setup() {
   pinMode(BLUE_PIN, INPUT_PULLUP);
   pinMode(WHITE_PIN, INPUT_PULLUP);
   pinMode(GREEN_PIN, INPUT_PULLUP);
-  attachInterrupt(YELLOW_PIN, yellowIsr, CHANGE);
-  attachInterrupt(BLUE_PIN, blueIsr, CHANGE);
-  attachInterrupt(WHITE_PIN, whiteIsr, CHANGE);
-  attachInterrupt(GREEN_PIN, greenIsr, CHANGE);
+  attachInterrupt(YELLOW_PIN, yellowIsr, LOW);
+  attachInterrupt(BLUE_PIN, blueIsr, LOW);
+  attachInterrupt(WHITE_PIN, whiteIsr, LOW);
+  attachInterrupt(GREEN_PIN, greenIsr, LOW);
 }
 
 void loop() {
-   uint32_t ms = millis();
+   uint32_t now = millis();
   //  Serial.println(lastKeyoutMs);
-  if(ms - lastKeyoutMs > COMBO_OPPORTUNITY_TIME) {
-   Serial.println(ms - lastKeyoutMs);
-    Serial.print(yellowState);
-    Serial.print(blueState);
-    Serial.print(whiteState);
-    Serial.println(greenState);
-  //   printKey();
+  if(now - lastKeyoutMs > COMBO_OPPORTUNITY_TIME) {
+    for(byte i = 0; i < NUMBER_OF_PINS; i++) {
+      Serial.print(comboState[i]);
+    }
+    Serial.println();
+    printKey();
+
     resetStates();
-    lastKeyoutMs = ms;
+    lastKeyoutMs = now;
   }
 }
 
 // class PinCatch {
 
 //   public:
-//     PinCatch(uint8_t pin, uint32_t dbTime = 25)
+//     PinCatch(byte pin, uint32_t dbTime = 25)
 //       : _pin(pin), _dbTime(dbTime) {}
     
 //     void begin() {
@@ -186,7 +192,7 @@ void loop() {
 //     }
 
 //   private:
-//     uint8_t _pin;               // pin to catch
+//     byte _pin;               // pin to catch
 //     uint32_t _dbTime;           // debounce time
 //     bool _state;                // current state; true = connected
 //     bool _lastState;            // previous state; true = connected
@@ -204,27 +210,27 @@ void loop() {
 //     void begin() {
 //       _lastActiveTime = millis();
 //       _hasChanged = false;
-//       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+//       for(byte i = 0; i < NUMBER_OF_PINS; i++) {
 //         _pinCatchers[i].begin();
 //       }
 //     }
 
 //     void reassignState(bool targetState [NUMBER_OF_PINS], bool sourceState [NUMBER_OF_PINS]) {
-//       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+//       for(byte i = 0; i < NUMBER_OF_PINS; i++) {
 //         targetState[i] = sourceState[i];
 //       }
 //     }
 
     
 //     void resetState() {
-//       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+//       for(byte i = 0; i < NUMBER_OF_PINS; i++) {
 //         _state[i] = false;
 //         _lastState[i] = false;
 //       }
 //     }
 
 //     bool isStateEqual(bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBER_OF_PINS]) {
-//       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+//       for(byte i = 0; i < NUMBER_OF_PINS; i++) {
 //         if(sampleState[i] != testState[i]) {
 //           return false;
 //         }
@@ -235,7 +241,7 @@ void loop() {
 //     void read() {
 //       uint32_t ms = millis();
 
-//       for(uint8_t i = 0; i < NUMBER_OF_PINS; i++) {
+//       for(byte i = 0; i < NUMBER_OF_PINS; i++) {
 //         _pinCatchers[i].read();
 //         if(_pinCatchers[i].isActive()) {
 //           _lastActiveTime = ms;
