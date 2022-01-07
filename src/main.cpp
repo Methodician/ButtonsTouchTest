@@ -183,25 +183,27 @@ class ComboCatch {
 
 ComboCatch comboCatch(COMBO_OPPORTUNITY_TIME);
 
+const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
+  {true, false, false, false},     // Yellow
+  {false, true, false, false},     // Blue
+  {false, false, true, false},     // White
+  {false, false, false, true},     // Green
+  {true, true, false, false},      // Yellow + Blue
+  {true, false, true, false},      // Yellow + White
+  {true, false, false, true},      // Yellow + Green
+  {false, true, true, false},      // Blue + White
+  {false, true, false, true},      // Blue + Green
+  {false, false, true, true},      // White + Green
+  {true, true, true, false},       // Yellow + Blue + White  
+  {true, true, false, true},       // Yellow + Blue + Green
+  {true, false, true, true},       // Yellow + White + Green
+  {false, true, true, true},       // Blue + White + Green
+  {true, true, true, true},        // Yellow + Blue + White + Green
+};
+
 char activeKey() {
   // Search me with hash functions?
-  const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
-    {true, false, false, false},     // Yellow
-    {false, true, false, false},     // Blue
-    {false, false, true, false},     // White
-    {false, false, false, true},     // Green
-    {true, true, false, false},      // Yellow + Blue
-    {true, false, true, false},      // Yellow + White
-    {true, false, false, true},      // Yellow + Green
-    {false, true, true, false},      // Blue + White
-    {false, true, false, true},      // Blue + Green
-    {false, false, true, true},      // White + Green
-    {true, true, true, false},       // Yellow + Blue + White  
-    {true, true, false, true},       // Yellow + Blue + Green
-    {true, false, true, true},       // Yellow + White + Green
-    {false, true, true, true},       // Blue + White + Green
-    {true, true, true, true},        // Yellow + Blue + White + Green
-  };
+
   const char keyStrokes [NUMBER_OF_COMBOS] = 
     {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'}; 
 
@@ -214,43 +216,115 @@ char activeKey() {
 }
 
 void showLights() {
-  // if(greenPin.isActive()) {
-  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 71, 2);
-  // } 
-  // if(greenPin.isInactive()) {
-  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
-  // }
-
-  // if(greenPin.isActive() && bluePin.isActive()) {
-  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0,  57, 59);
-  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 57, 59);
-
-  // }
-  // if(greenPin.isInactive() && bluePin.isInactive()) {
-  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
-  //   CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
-  // }
-
-  // if(whitePin.isActive()) {
-  //   CircuitPlayground.setPixelColor(WHITE_PIXEL, 48, 48, 48);
-  // }
-  // if(whitePin.isInactive()) {
-  //   CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
-  // }
-
-  // if(yellowPin.isActive()) {
-  //   CircuitPlayground.setPixelColor(YELLOW_PIXEL, 71, 69, 0);
-  // }
-  // if(yellowPin.isInactive()) {
-  //   CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
-  // }
-
-  // if(bluePin.isActive()) {
-  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 71);
-  // }
-  // if(bluePin.isInactive()) {
-  //   CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
-  // }
+  if(comboCatch.isActive(keyStates[0])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[1])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[2])) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[3])) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[4])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[5])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[6])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[7])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[8])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[9])) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[10])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[11])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[12])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[13])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(comboCatch.isActive(keyStates[14])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
 }
 
 void setup() {
@@ -263,6 +337,7 @@ void setup() {
 // Try interrupts some day
 void loop() {
   comboCatch.read();
+  showLights();
   const char keyStroke = activeKey();
   if(keyStroke != NULL) {
     Serial.println(keyStroke);
