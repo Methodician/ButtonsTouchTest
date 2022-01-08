@@ -34,9 +34,17 @@ uint32_t lastKeyoutMs = 0;
 
 uint32_t lastPinReads [NUMBER_OF_PINS] = {0, 0, 0, 0};
 
+void updateDebounceTimes(uint32_t currentTime) {
+  for (int i = 0; i < NUMBER_OF_PINS; i++) {
+    lastPinReads[i] = currentTime;
+  }
+  lastKeyoutMs = currentTime;
+}
+
 void mergedIsr(byte pin){
   uint32_t now = millis();
   if(!comboState[pin] && !digitalRead(pin) && now - lastPinReads[pin] > DEBOUNCE_TIME){
+    Serial.println(pin);
     lastPinReads[pin] = now;
     comboState[pin] = true;
   }
@@ -59,7 +67,6 @@ void resetStates() {
     comboState[i] = false;
   }
 }
-
 
 const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
   {true, false, false, false},     // Yellow
@@ -105,6 +112,7 @@ void printKey() {
 
   const int keyIndex = comboMatchIndex();
   if(keyIndex != -1) {
+    resetStates();
     Serial.println(keyStrokes[keyIndex]);
   }
 }
@@ -119,7 +127,6 @@ void printState() {
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
-  lastKeyoutMs = millis();
   pinMode(YELLOW_PIN, INPUT_PULLUP);
   pinMode(BLUE_PIN, INPUT_PULLUP);
   pinMode(WHITE_PIN, INPUT_PULLUP);
@@ -133,10 +140,8 @@ void setup() {
 void loop() {
    uint32_t now = millis();
   if(now - lastKeyoutMs > COMBO_OPPORTUNITY_TIME) {
-    lastKeyoutMs = now;
-    printState();
     printKey();
-    resetStates();
+    updateDebounceTimes(now);
   }
 }
 
