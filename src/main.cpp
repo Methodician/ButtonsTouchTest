@@ -124,6 +124,118 @@ void printState() {
   Serial.println();
 }
 
+void showLights() {
+  if(testComboMatch(keyStates[0])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[1])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[2])) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[3])) {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[4])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[5])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[6])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[7])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[8])) {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[9])) {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[10])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[11])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[12])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[13])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 87, 3);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(GREEN_PIXEL, 0, 0, 0);
+  }
+  if(testComboMatch(keyStates[14])) {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 60, 60, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 40, 40, 40);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 3, 87);
+  } else {
+    CircuitPlayground.setPixelColor(YELLOW_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(WHITE_PIXEL, 0, 0, 0);
+    CircuitPlayground.setPixelColor(BLUE_PIXEL, 0, 0, 0);
+  }
+}
+
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
@@ -143,6 +255,7 @@ void loop() {
     printKey();
     updateDebounceTimes(now);
   }
+  showLights();
 }
 
 // #include <Arduino.h>
