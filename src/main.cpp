@@ -79,9 +79,9 @@ const bool keyStates [NUMBER_OF_COMBOS][NUMBER_OF_PINS] = {
   {true, true, true, true},        // Yellow + Blue + White + Green
 };
 
-bool isStateEqual(volatile bool sampleState [NUMBER_OF_PINS], const bool testState [NUMBER_OF_PINS]) {
+bool testComboMatch(const bool testState [NUMBER_OF_PINS]) {
   for(byte i = 0; i < NUMBER_OF_PINS; i++) {
-    if(sampleState[i] != testState[i]) {
+    if(comboState[i] != testState[i]) {
       return false;
     }
   }
@@ -91,7 +91,7 @@ bool isStateEqual(volatile bool sampleState [NUMBER_OF_PINS], const bool testSta
 int comboMatchIndex() {
   int index = -1;
   for(int i = 0; i < NUMBER_OF_COMBOS; i++) {
-    if(isStateEqual(comboState, keyStates[i])) {
+    if(testComboMatch(keyStates[i])) {
       index = i;
       break;
     }
@@ -107,6 +107,13 @@ void printKey() {
   if(keyIndex != -1) {
     Serial.println(keyStrokes[keyIndex]);
   }
+}
+
+void printState() {
+  for(byte i = 0; i < NUMBER_OF_PINS; i++) {
+    Serial.print(comboState[i]);
+  }
+  Serial.println();
 }
 
 void setup() {
@@ -125,18 +132,43 @@ void setup() {
 
 void loop() {
    uint32_t now = millis();
-  //  Serial.println(lastKeyoutMs);
   if(now - lastKeyoutMs > COMBO_OPPORTUNITY_TIME) {
-    for(byte i = 0; i < NUMBER_OF_PINS; i++) {
-      Serial.print(comboState[i]);
-    }
-    Serial.println();
-    printKey();
-
-    resetStates();
     lastKeyoutMs = now;
+    printState();
+    printKey();
+    resetStates();
   }
 }
+
+// #include <Arduino.h>
+// #include <Adafruit_CircuitPlayground.h>
+
+// //  A0 p?
+// //  A1 p6
+// //  A2 p9
+// //  A3 p10
+// //  A4 p3
+// //  A5 p2
+// //  A6 p0
+// //  A7 p1
+
+
+
+// #define YELLOW_PIN     0 // A6
+// #define BLUE_PIN       1 // A7
+// #define WHITE_PIN      2 // A5
+// #define GREEN_PIN      3 // A4
+// #define GREEN_PIXEL     0
+// #define WHITE_PIXEL     1
+// #define YELLOW_PIXEL    3
+// #define BLUE_PIXEL      4
+
+// #define DEBOUNCE_TIME  25
+
+// #define COMBO_OPPORTUNITY_TIME 300
+
+// #define NUMBER_OF_COMBOS 15
+// #define NUMBER_OF_PINS 4
 
 // class PinCatch {
 
