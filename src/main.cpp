@@ -21,7 +21,7 @@
 #define YELLOW_PIXEL    3
 #define BLUE_PIXEL      4
 
-#define DEBOUNCE_TIME  25
+#define DEBOUNCE_TIME  60
 
 #define COMBO_OPPORTUNITY_TIME 300
 
